@@ -23,6 +23,11 @@ int main(void)
 	or 2 for a raw PPM file (magic number P6)
 	**/
 	int fileType = 0; 
+	int RAW_PPM = 2;
+	int PLAIN_PPM = 1;
+	int height = 0;
+	int width = 0;
+	int readingDimensions = 1;
  
 	fp = fopen("./ppm-files/feep.ppm", "r");
 	if (fp == NULL)
@@ -41,17 +46,44 @@ int main(void)
 				if(!isspace(line[i])){
 					if(!fileType) {
 						if(line[i] == 80 && line[i+1] == 51) {
-							fileType = 1;
+							fileType = PLAIN_PPM;
 							printf("File type is plain PPM (P3)\n");
 							break;
 						} else if (line[i] == 80 && line[i+1] == 54) {
-							fileType = 2;
+							fileType = RAW_PPM;
 							printf("File type is raw PPM (P6)\n");
 							break;
 						} else {
-							printf("Incorrect file format detected, aborting");
+							printf("Incorrect file format detected, aborting\n");
 							exit(EXIT_FAILURE);
 						}
+					} else if (fileType == RAW_PPM) {
+
+					} else if (fileType == PLAIN_PPM) {
+						if(readingDimensions) {
+							int j = i;
+							while(!isspace(line[j])){
+								width = width * 10 + ( line[j] - '0' );
+								j++;
+							}
+							while(isspace(line[j])) {
+								j++;
+							}
+							while(!isspace(line[j]) && (j != read - 1)) {
+								height = height * 10 + ( line[j] - '0' );
+								j++;
+							}
+							readingDimensions = 0;
+							printf("Detected width = %d\n", width);
+							printf("Detected height = %d\n", height);
+							break;
+						} else {
+							printf("Unexpected behaviour encountered during dimensions interpreting, aborting\n");
+							exit(EXIT_FAILURE);
+						}
+					} else {
+						printf("Unexpected behaviour enountered during filetype interpreting, aborting\n");
+						exit(EXIT_FAILURE);
 					}
 				}				
 			}
