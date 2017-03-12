@@ -33,15 +33,35 @@ int main(int argc, char **argv) {
 
 	int readingDimensions = 1;
 	int readingColourDepth = 1;
+	int readingData = 1;
 
-	// "./ppm-files/feep.ppm"
+	if(argc != 3) {
+		printf("Incorrect number of arguments supplied, hide expects 2 arguments\n[1] path to ppm file to hide a message in\n[2] a name for the output ppm file\n");
+	}
+	// ./ppm-files/feep.ppm
 
-	fp = fopen(argv[1], "r");
+	fp = fopen(argv[1], "r+");
 	if (fp == NULL) {
-		printf("Could not open supplied file: %s\nExiting\n", argv[1]);
+		printf("Could not open supplied file: %s - Exiting\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
-	
+
+	if (fgetc(fp) == 80) {
+		if(fgetc(fp) == 54) {
+			printf("File type is raw PPM (P6)\n");
+			while(isspace(fgetc(fp){})); //skips through white space
+
+
+		}
+	} else {
+		printf("Incorrect file format detected, aborting\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/**
+	while (fgetc(fp) != "EOF") {
+		printf("%c", fgetc(fp));
+	}
 	while ((lineLength = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu :\n", lineLength);
 	    //printf("%s", line);
@@ -70,8 +90,6 @@ int main(int argc, char **argv) {
 							exit(EXIT_FAILURE);
 						}
 					} else if (fileType == RAW_PPM) {
-
-					} else if (fileType == PLAIN_PPM) {
 						if(readingDimensions) {
 							int j = i;
 							while(!isspace(line[j])){
@@ -106,6 +124,8 @@ int main(int argc, char **argv) {
 							} else {
 								readingColourDepth = 0;
 							}
+						} else if (readingData) {
+							printf("%u\n", line[i]);
 						}
 					} else {
 						printf("Unexpected behaviour enountered during filetype interpreting, aborting\n");
@@ -115,8 +135,9 @@ int main(int argc, char **argv) {
 			}
         }
 	}
- 
+	
 	free(line);
 	fclose(fp);
+	**/
 	exit(EXIT_SUCCESS);
 }
