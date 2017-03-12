@@ -23,11 +23,15 @@ int main(void)
 	or 2 for a raw PPM file (magic number P6)
 	**/
 	int fileType = 0; 
+
+	// Constant values used for file type int, to make it easier to reason about in code
 	int RAW_PPM = 2;
 	int PLAIN_PPM = 1;
+	
 	int height = 0;
 	int width = 0;
 	int colourDepth = 0;
+
 	int readingDimensions = 1;
 	int readingColourDepth = 1;
 
@@ -66,14 +70,14 @@ int main(void)
 						if(readingDimensions) {
 							int j = i;
 							while(!isspace(line[j])){
-								width = width * 10 + ( line[j] - '0' );
+								width = width * 10 + (line[j] - 48);
 								j++;
 							}
 							while(isspace(line[j])) {
 								j++;
 							}
 							while(!isspace(line[j]) && (j != lineLength - 1)) {
-								height = height * 10 + ( line[j] - '0' );
+								height = height * 10 + (line[j] - 48);
 								j++;
 							}
 							readingDimensions = 0;
@@ -83,7 +87,7 @@ int main(void)
 						} else if (readingColourDepth) {
 							int j = i;
 							while(!isspace(line[j])){
-								colourDepth = colourDepth * 10 + ( line[j] - '0' );
+								colourDepth = colourDepth * 10 + (line[j] - 48);
 								j++;
 							}
 							printf("Detected colour depth = %d\n", colourDepth);
