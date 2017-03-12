@@ -45,6 +45,10 @@ int main(void)
         //printf("Retrieved line of length %zu :\n", lineLength);
 	    //printf("%s", line);
         int i;
+		if(fileType == PLAIN_PPM && lineLength > 70) {
+			printf("Detected a linelength of %lu, plain PPM files should not exceed 70 chars, exiting\n", lineLength);
+			exit(EXIT_FAILURE);
+		}
         for(i = 0; i < strlen(line); i++) {
             if(line[i] == 35) { // 35 is ascii code for # symbol
                 printf("Found comment, skipping...\n");
