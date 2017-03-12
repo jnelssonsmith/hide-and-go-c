@@ -15,7 +15,7 @@ int main(void)
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
-	ssize_t read;
+	ssize_t lineLength;
 
 	/**
 	fileType val is initialised to 0 before we reach the part of file that should be the fileType.
@@ -27,15 +27,18 @@ int main(void)
 	int PLAIN_PPM = 1;
 	int height = 0;
 	int width = 0;
+	int colourDepth = 0;
 	int readingDimensions = 1;
+	int readingColourDepth = 1;
+
  
 	fp = fopen("./ppm-files/feep.ppm", "r");
 	if (fp == NULL)
 		exit(EXIT_FAILURE);
 	
 	
-	while ((read = getline(&line, &len, fp)) != -1) {
-        //printf("Retrieved line of length %zu :\n", read);
+	while ((lineLength = getline(&line, &len, fp)) != -1) {
+        //printf("Retrieved line of length %zu :\n", lineLength);
 	    //printf("%s", line);
         int i;
         for(i = 0; i < strlen(line); i++) {
@@ -69,7 +72,7 @@ int main(void)
 							while(isspace(line[j])) {
 								j++;
 							}
-							while(!isspace(line[j]) && (j != read - 1)) {
+							while(!isspace(line[j]) && (j != lineLength - 1)) {
 								height = height * 10 + ( line[j] - '0' );
 								j++;
 							}
@@ -77,9 +80,23 @@ int main(void)
 							printf("Detected width = %d\n", width);
 							printf("Detected height = %d\n", height);
 							break;
-						} else {
-							printf("Unexpected behaviour encountered during dimensions interpreting, aborting\n");
-							exit(EXIT_FAILURE);
+						} else if (readingColourDepth) {
+							int j = i;
+							while(!isspace(line[j])){
+								colourDepth = colourDepth * 10 + ( line[j] - '0' );
+								j++;
+							}
+							printf("Detected colour depth = %d\n", colourDepth);
+
+							if(colourDepth > 65535) {
+								printf("Invalid colour depth found, must be less than 65536\n");
+								exit(EXIT_FAILURE);
+							} else if (colourDepth < 1) {
+								printf("Invalid colour depth found, must be greater than 0\n");
+								exit(EXIT_FAILURE);
+							} else {
+								readingColourDepth = 0;
+							}
 						}
 					} else {
 						printf("Unexpected behaviour enountered during filetype interpreting, aborting\n");
