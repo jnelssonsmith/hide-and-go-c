@@ -1,7 +1,7 @@
  /*
 NAME: Joshua Nelsson-Smith
 START DATE: 10/03/17
-LAST MODIFIED: 10/03/17
+LAST MODIFIED: 12/03/17
 DESCRIPTION: 
 */
 
@@ -10,8 +10,7 @@ DESCRIPTION:
 #include <string.h>
 #include <ctype.h>
 
-int main(void)
-{
+int main(int argc, char **argv) {
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
@@ -35,11 +34,13 @@ int main(void)
 	int readingDimensions = 1;
 	int readingColourDepth = 1;
 
- 
-	fp = fopen("./ppm-files/feep.ppm", "r");
-	if (fp == NULL)
+	// "./ppm-files/feep.ppm"
+
+	fp = fopen(argv[1], "r");
+	if (fp == NULL) {
+		printf("Could not open supplied file: %s\nExiting\n", argv[1]);
 		exit(EXIT_FAILURE);
-	
+	}
 	
 	while ((lineLength = getline(&line, &len, fp)) != -1) {
         //printf("Retrieved line of length %zu :\n", lineLength);
