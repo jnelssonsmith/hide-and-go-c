@@ -15,19 +15,30 @@ int getWidth(FILE *fp);
 int getHeight(FILE *fp);
 void scanToNextVal(FILE *fp);
 int getColourRange(FILE *fp);
+void printBitShiftedValues(int value);
+void getNextBitToHide(char message[], int *byteIndexPtr, int *indexPtr);
 
 int main(int argc, char **argv) {
 	FILE *fp;
 
+
+
 	int height;
 	int width;
 	int colourRange;
+	
+	char message[] = "he";
+	int byteIndex = 7;
+	int *byteIndexPtr = &byteIndex;
+	int index = 0;
+	int *indexPtr = &index;
+	
 
 	if(argc != 3) {
 		printf("Incorrect number of arguments supplied, hide expects 2 arguments\n[1] path to ppm file to hide a message in\n[2] a name for the output ppm file\n");
 	}
 
-	fp = fopen(argv[1], "r+");
+	fp = fopen(argv[1], "rb");
 	if (fp == NULL) {
 		printf("Could not open supplied file: %s - Exiting\n", argv[1]);
 		exit(EXIT_FAILURE);
@@ -40,6 +51,33 @@ int main(int argc, char **argv) {
 		height = getHeight(fp);
 		scanToNextVal(fp);
 		colourRange = getColourRange(fp);
+
+		int index = 0;
+		printf("hello world\n");
+		/**
+
+		while(message[index]) {
+			printBitShiftedValues(message[index]);
+			index++;
+		}
+		printf("\n");
+		**/
+
+
+		/**
+		int count = 0;
+		while(!isspace(fgetc(fp))){ 
+			count += 1;
+			printf("%d - r: %d, g: %d, b %d\n", count, fgetc(fp), fgetc(fp), fgetc(fp));
+			
+		}
+		**/
+		for(int i=0; i < 25; i++) {
+			getNextBitToHide(message, byteIndexPtr, indexPtr);
+		}
+		printf("\n");
+
+		
 	} else {
 		printf("Incorrect file format detected, aborting\n");
 		exit(EXIT_FAILURE);
@@ -120,3 +158,44 @@ void scanToNextVal(FILE *fp) {
 }
 
 
+int canHideMessage(int width, int height) {
+
+} 
+
+void printBitShiftedValues(int value) {
+	int tmp;
+	printf("\n--------------\n");
+	printf("Working on char: %c, ascii val: %d\n", value, value);
+	for(int i=7; i > -1; i--) {
+		tmp = value >> i & 1; // shifts the value to the last positon, then applies a one bit mask to get the last value
+		printf("%d", tmp);
+	}
+}
+
+void getNextBitToHide(char message[], int *byteIndexPtr, int *indexPtr) {
+	int currentChar;
+	int bitVal;
+
+	if(message[*indexPtr]) {
+		currentChar = message[*indexPtr];
+		bitVal = currentChar >> *byteIndexPtr & 1;
+		printf("%d", bitVal);
+
+		*byteIndexPtr -= 1;
+		if(*byteIndexPtr == -1) {
+			*byteIndexPtr = 7;
+			*indexPtr += 1;
+			printf("\n ------- Finished with character %c---------\n", currentChar);
+		} else {
+			// do nothing
+		}
+	} else {
+		if(*byteIndexPtr == -1) {
+			printf("\n-- Finished with null byte --\n");
+			printf("%d", -1);
+		} else {
+			printf("%d", 0);
+			*byteIndexPtr -= 1;
+		}
+	}
+}
