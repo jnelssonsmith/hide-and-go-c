@@ -9,88 +9,93 @@ DESCRIPTION:
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#define FINISHED_WRITING_SECRET 2
 
-int isRawPPM(FILE *fp);
-int getWidth(FILE *fp);
-int getHeight(FILE *fp);
-void scanToNextVal(FILE *fp);
-int getColourRange(FILE *fp);
-void printBitShiftedValues(int value);
-void getNextBitToHide(char message[], int *byteIndexPtr, int *indexPtr);
+int isRawPPM(FILE *inputFile, FILE *outputFile);
+
+int getWidth(FILE *inputFP);
+int getHeight(FILE *inputFP);
+int getColourRange(FILE *inputFP);
+void scanToNextVal(FILE *inputFile, FILE *outputFile);
+
+int getNextBitToHide(int *byteIndexPtr);
+int canHideMessage(int width, int height);
+void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP);
+
+void writeColourRange(int colourRange, FILE *outputFP);
+void writeWidth(int width, FILE *outputFP);
+void writeHeight(int height, FILE *outputFP);
 
 int main(int argc, char **argv) {
-	FILE *fp;
-
-
+	
+	FILE *inputFP;
+	FILE *outputFP;
+	
 
 	int height;
 	int width;
 	int colourRange;
-	
-	char message[] = "he";
+
 	int byteIndex = 7;
 	int *byteIndexPtr = &byteIndex;
 	int index = 0;
 	int *indexPtr = &index;
-	
 
+	printf("argc: %d\n", argc);
 	if(argc != 3) {
 		printf("Incorrect number of arguments supplied, hide expects 2 arguments\n[1] path to ppm file to hide a message in\n[2] a name for the output ppm file\n");
-	}
-
-	fp = fopen(argv[1], "rb");
-	if (fp == NULL) {
-		printf("Could not open supplied file: %s - Exiting\n", argv[1]);
 		exit(EXIT_FAILURE);
-	}
-
-	if(isRawPPM(fp)){
-		scanToNextVal(fp);
-		width = getWidth(fp);
-		scanToNextVal(fp);
-		height = getHeight(fp);
-		scanToNextVal(fp);
-		colourRange = getColourRange(fp);
-
-		int index = 0;
-		printf("hello world\n");
-		/**
-
-		while(message[index]) {
-			printBitShiftedValues(message[index]);
-			index++;
-		}
-		printf("\n");
-		**/
-
-
-		/**
-		int count = 0;
-		while(!isspace(fgetc(fp))){ 
-			count += 1;
-			printf("%d - r: %d, g: %d, b %d\n", count, fgetc(fp), fgetc(fp), fgetc(fp));
-			
-		}
-		**/
-		for(int i=0; i < 25; i++) {
-			getNextBitToHide(message, byteIndexPtr, indexPtr);
-		}
-		printf("\n");
-
-		
 	} else {
-		printf("Incorrect file format detected, aborting\n");
-		exit(EXIT_FAILURE);
-	}
+		inputFP = fopen(argv[1], "rb");
+		if (inputFP == NULL) {
+			printf("Could not open supplied file: %s\n", argv[1]);
+			exit(EXIT_FAILURE);
+		}
 
-	exit(EXIT_SUCCESS);
+		outputFP = fopen(argv[2], "wb");
+
+		if(isRawPPM(inputFP, outputFP)){
+			scanToNextVal(inputFP, outputFP);
+			
+			width = getWidth(inputFP);
+			writeWidth(width, outputFP);
+
+			scanToNextVal(inputFP, outputFP);
+			
+			height = getHeight(inputFP);
+			writeHeight(height, outputFP);
+
+			scanToNextVal(inputFP, outputFP);
+			
+			colourRange = getColourRange(inputFP);
+			writeColourRange(colourRange, outputFP);
+			
+			scanToNextVal(inputFP, outputFP);
+
+			if(canHideMessage(width, height)){
+				hideMessage(byteIndexPtr, inputFP, outputFP);
+			} else {
+				printf("Message is too large for given file, please use a smaller message or a larger file\n");
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			printf("Incorrect file format detected, aborting\n");
+			exit(EXIT_FAILURE);
+		}
+
+		fclose(inputFP);
+		fclose(outputFP);
+		exit(EXIT_SUCCESS);
+	}
 }
 
 
-int isRawPPM(FILE *fp) {
-	if (fgetc(fp) == 80) {
-		if(fgetc(fp) == 54) {
+int isRawPPM(FILE *inputFile, FILE *outputFile) {
+	if (fgetc(inputFile) == 'P') {
+		if(fgetc(inputFile) == '6') {
 			printf("File type is raw PPM (P6)\n");
+			fputc('P', outputFile);
+			fputc('6', outputFile);
 			return 1;
 		}
 	}
@@ -98,13 +103,14 @@ int isRawPPM(FILE *fp) {
 	return 0;
 }
 
-int getWidth(FILE *fp) {
+int getWidth(FILE *inputFP) {
 	int currentChar;
 	int width = 0; 
 	while(1) {
-		
-		currentChar = fgetc(fp);
+		currentChar = fgetc(inputFP);
+		//fputc(currentChar, outputFP);
 		if(isspace(currentChar)){
+			ungetc(currentChar, inputFP);
 			printf("Width: %d\n", width);
 			return width;
 		} else {
@@ -113,13 +119,19 @@ int getWidth(FILE *fp) {
 	}
 }
 
-int getHeight(FILE *fp) {
+
+void writeWidth(int width, FILE *outputFP) {
+	fprintf(outputFP, "%d", width);
+}
+
+int getHeight(FILE *inputFP) {
 	int currentChar;
 	int height = 0; 
 	while(1) {
-		
-		currentChar = fgetc(fp);
+		currentChar = fgetc(inputFP);
+		//fputc(currentChar, outputFP);
 		if(isspace(currentChar)){
+			ungetc(currentChar, inputFP);
 			printf("Height: %d\n", height);
 			return height;
 		} else {
@@ -128,12 +140,16 @@ int getHeight(FILE *fp) {
 	}
 }
 
-int getColourRange(FILE *fp) {
+void writeHeight(int height, FILE *outputFP) {
+	fprintf(outputFP, "%d", height);
+}
+
+int getColourRange(FILE *inputFP) {
 	int currentChar;
 	int colourRange = 0; 
 	while(1) {
 		
-		currentChar = fgetc(fp);
+		currentChar = fgetc(inputFP);
 		if(isspace(currentChar)){
 			if(currentChar < 1) {
 				printf("Colour range value must be greater than 0, detected: %d", colourRange);
@@ -143,59 +159,120 @@ int getColourRange(FILE *fp) {
 				exit(EXIT_FAILURE);
 			} else {
 				printf("Colour range: 0 to %d\n", colourRange);
+				ungetc(currentChar, inputFP); //give back last grabbed value
 				return colourRange;
 			}
 		} else {
+			//fputc(currentChar, outputFP);
 			colourRange = colourRange * 10 + (currentChar - 48);
 		}
 	}
 }
 
-void scanToNextVal(FILE *fp) {
+void writeColourRange(int colourRange, FILE *outputFP) {
+	fprintf(outputFP, "%d", colourRange);
+}
+
+void scanToNextVal(FILE *inputFile, FILE *outputFile) {
 	int temp;
-	while(isspace(temp = fgetc(fp))){} //do nothing
-	ungetc(temp, fp);
+	while(1){
+		temp = fgetc(inputFile);
+		if(isspace(temp)) {
+			fputc(temp, outputFile);
+		} else {
+			break;
+		}
+	} 
+	ungetc(temp, inputFile);
 }
 
 
 int canHideMessage(int width, int height) {
+	int values = width * height * 3;  // the number of bytes we have available to hide a message index
+	//int totalBits = messageLength * 8; // the number of bits we need to hide
+	int totalBits = 100; //hardCodeforNow
+	if(totalBits > values) {
+		return 0;
+	} else {
+		printf("Detected %d bytes to hide within\n", values);
+		printf("Detected %d bits to hide\n", totalBits);
+		return 1;
+	}
 
 } 
 
-void printBitShiftedValues(int value) {
-	int tmp;
-	printf("\n--------------\n");
-	printf("Working on char: %c, ascii val: %d\n", value, value);
-	for(int i=7; i > -1; i--) {
-		tmp = value >> i & 1; // shifts the value to the last positon, then applies a one bit mask to get the last value
-		printf("%d", tmp);
-	}
-}
-
-void getNextBitToHide(char message[], int *byteIndexPtr, int *indexPtr) {
-	int currentChar;
+int getNextBitToHide(int *byteIndexPtr) {
+	int currentMessageChar;
 	int bitVal;
 
-	if(message[*indexPtr]) {
-		currentChar = message[*indexPtr];
-		bitVal = currentChar >> *byteIndexPtr & 1;
-		printf("%d", bitVal);
+	currentMessageChar = fgetc(stdin);
+	
+	if(currentMessageChar != EOF) {
+		printf("%c", currentMessageChar);
+		if(*byteIndexPtr == 7) {
+			//printf("\n%c  = ", message[*indexPtr]);
+		}
+
+		bitVal = currentMessageChar >> *byteIndexPtr & 1;
+		//printf("%d", bitVal);
 
 		*byteIndexPtr -= 1;
 		if(*byteIndexPtr == -1) {
 			*byteIndexPtr = 7;
-			*indexPtr += 1;
-			printf("\n ------- Finished with character %c---------\n", currentChar);
-		} else {
-			// do nothing
 		}
+
+		return bitVal;
+
 	} else {
 		if(*byteIndexPtr == -1) {
-			printf("\n-- Finished with null byte --\n");
-			printf("%d", -1);
+			//printf("\n");
+			return FINISHED_WRITING_SECRET;
 		} else {
-			printf("%d", 0);
+			if(*byteIndexPtr == 7) {
+				//printf("\n\\0 = ");
+			}
+			//printf("%d", 0);
 			*byteIndexPtr -= 1;
+			return 0;
 		}
 	}
+}
+
+
+ 
+void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
+	int bitToHide, currentNum, currentVal, compareBit;
+	while(1) {
+		bitToHide = getNextBitToHide(byteIndexPtr);
+		if(bitToHide == FINISHED_WRITING_SECRET) {
+			break;
+		} else {
+			currentNum = fgetc(inputFP);
+			compareBit = currentNum % 2;
+			if(compareBit && bitToHide) {
+				// compareBit = 1 and bitToHide = 1
+				// dont do anything, bit is already there
+				fputc(currentNum, outputFP);
+			} else if (compareBit && !bitToHide) {
+				// compareBit = 1 and bitToHide = 0
+				fputc(currentNum - 1, outputFP);
+			} else if (!compareBit && bitToHide) {
+				// compareBit = 0 and bitToHide = 1
+				fputc(currentNum + 1, outputFP);
+			} else {
+				// compareBit = 0 and bitToHide = 0
+				// dont do anything bit is already there
+				fputc(currentNum, outputFP);
+		}
+	}
+
+	while (inputFP) {
+		currentVal = fgetc(inputFP);
+		if(currentVal == EOF) {
+			break;
+		} else {
+			fputc(currentVal, outputFP);
+		}
+	}
+}
 }
