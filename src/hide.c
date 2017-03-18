@@ -13,7 +13,6 @@ DESCRIPTION:
 #include "ppmlib.h"
 #include "steglib.h"
 
-
 int main(int argc, char **argv) {
 	
 	FILE *inputFP;

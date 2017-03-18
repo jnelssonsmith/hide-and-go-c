@@ -16,8 +16,10 @@ int isRawPPM(FILE *inputFile, FILE *outputFile) {
 	if (fgetc(inputFile) == 'P') {
 		if(fgetc(inputFile) == '6') {
 			printf("File type is raw PPM (P6)\n");
-			fputc('P', outputFile);
-			fputc('6', outputFile);
+			if(outputFile != NULL) {
+				fputc('P', outputFile);
+				fputc('6', outputFile);
+			}
 			return 1;
 		}
 	}
@@ -92,4 +94,15 @@ void scanToNextVal(FILE *inputFile, FILE *outputFile) {
 		}
 	} 
 	ungetc(temp, inputFile);
+}
+
+
+void scanToImageData(FILE *inputFP) {
+	scanToNextVal(inputFP, NULL);
+	getWidth(inputFP);
+	scanToNextVal(inputFP, NULL);
+	getHeight(inputFP);
+	scanToNextVal(inputFP, NULL);
+    getColourRange(inputFP);
+	scanToNextVal(inputFP, NULL);
 }

@@ -6,5 +6,6 @@ int getWidth(FILE *inputFP);
 int getHeight(FILE *inputFP);
 int getColourRange(FILE *inputFP);
 void scanToNextVal(FILE *inputFile, FILE *outputFile);
+void scanToImageData(FILE *inputFP);
 
 #endif
