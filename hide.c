@@ -239,6 +239,7 @@ int getNextBitToHide(int *byteIndexPtr) {
  
 void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
 	int bitToHide, currentNum, currentVal, compareBit;
+	
 	while(1) {
 		bitToHide = getNextBitToHide(byteIndexPtr);
 		if(bitToHide == FINISHED_WRITING_SECRET) {
@@ -264,5 +265,4 @@ void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
 			fputc(currentVal, outputFP);
 		}
 	}
-}
 }
