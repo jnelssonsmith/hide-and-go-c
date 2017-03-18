@@ -1,7 +1,7 @@
  /*
 NAME: Joshua Nelsson-Smith
 START DATE: 10/03/17
-LAST MODIFIED: 12/03/17
+LAST MODIFIED: 18/03/17
 DESCRIPTION: 
 */
 
@@ -16,10 +16,12 @@ int isRawPPM(FILE *inputFile, FILE *outputFile);
 int getWidth(FILE *inputFP);
 int getHeight(FILE *inputFP);
 int getColourRange(FILE *inputFP);
+int getMessageSize(FILE *messageFP, char message[]);
+
 void scanToNextVal(FILE *inputFile, FILE *outputFile);
 
 int getNextBitToHide(int *byteIndexPtr);
-int canHideMessage(int width, int height);
+int canHideMessage(int width, int height, int messageSize);
 void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP);
 
 void writeColourRange(int colourRange, FILE *outputFP);
@@ -31,17 +33,16 @@ int main(int argc, char **argv) {
 	FILE *inputFP;
 	FILE *outputFP;
 	
-
+	char message[65536];
+	int messageSize;
 	int height;
 	int width;
 	int colourRange;
+	int scanCount;
 
 	int byteIndex = 7;
 	int *byteIndexPtr = &byteIndex;
-	int index = 0;
-	int *indexPtr = &index;
 
-	printf("argc: %d\n", argc);
 	if(argc != 3) {
 		printf("Incorrect number of arguments supplied, hide expects 2 arguments\n[1] path to ppm file to hide a message in\n[2] a name for the output ppm file\n");
 		exit(EXIT_FAILURE);
@@ -54,6 +55,12 @@ int main(int argc, char **argv) {
 
 		outputFP = fopen(argv[2], "wb");
 
+		messageSize = getMessageSize(stdin, message);
+		if(messageSize == -1) {
+			printf("Message too large, hide only supports messages smaller than 65536 bytes\n");
+			exit(EXIT_FAILURE);
+		}
+
 		if(isRawPPM(inputFP, outputFP)){
 			scanToNextVal(inputFP, outputFP);
 			
@@ -61,18 +68,18 @@ int main(int argc, char **argv) {
 			writeWidth(width, outputFP);
 
 			scanToNextVal(inputFP, outputFP);
-			
+
 			height = getHeight(inputFP);
 			writeHeight(height, outputFP);
 
 			scanToNextVal(inputFP, outputFP);
-			
+
 			colourRange = getColourRange(inputFP);
 			writeColourRange(colourRange, outputFP);
 			
 			scanToNextVal(inputFP, outputFP);
 
-			if(canHideMessage(width, height)){
+			if(canHideMessage(width, height, messageSize)){
 				hideMessage(byteIndexPtr, inputFP, outputFP);
 			} else {
 				printf("Message is too large for given file, please use a smaller message or a larger file\n");
@@ -175,7 +182,9 @@ void scanToNextVal(FILE *inputFile, FILE *outputFile) {
 	while(1){
 		temp = fgetc(inputFile);
 		if(isspace(temp)) {
-			fputc(temp, outputFile);
+			if(outputFile != NULL) {
+				fputc(temp, outputFile);
+			}
 		} else {
 			break;
 		}
@@ -184,15 +193,15 @@ void scanToNextVal(FILE *inputFile, FILE *outputFile) {
 }
 
 
-int canHideMessage(int width, int height) {
-	int values = width * height * 3;  // the number of bytes we have available to hide a message index
-	//int totalBits = messageLength * 8; // the number of bits we need to hide
-	int totalBits = 100; //hardCodeforNow
-	if(totalBits > values) {
+int canHideMessage(int width, int height, int messageSize) {
+	int availableBytes = width * height * 3;  // the number of bytes we have available to hide a message index
+	int necessaryBytes = messageSize + 2; // includes the 2 bytes we use for the integer 
+	int necessaryBits = necessaryBytes * 8;
+	if(necessaryBits > availableBytes) {
 		return 0;
 	} else {
-		printf("Detected %d bytes to hide within\n", values);
-		printf("Detected %d bits to hide\n", totalBits);
+		printf("Detected %d bytes to hide within\n", availableBytes);
+		printf("Detected %d bits to hide\n", necessaryBits);
 		return 1;
 	}
 
@@ -206,12 +215,8 @@ int getNextBitToHide(int *byteIndexPtr) {
 	
 	if(currentMessageChar != EOF) {
 		printf("%c", currentMessageChar);
-		if(*byteIndexPtr == 7) {
-			//printf("\n%c  = ", message[*indexPtr]);
-		}
 
 		bitVal = currentMessageChar >> *byteIndexPtr & 1;
-		//printf("%d", bitVal);
 
 		*byteIndexPtr -= 1;
 		if(*byteIndexPtr == -1) {
@@ -222,19 +227,34 @@ int getNextBitToHide(int *byteIndexPtr) {
 
 	} else {
 		if(*byteIndexPtr == -1) {
-			//printf("\n");
 			return FINISHED_WRITING_SECRET;
 		} else {
-			if(*byteIndexPtr == 7) {
-				//printf("\n\\0 = ");
-			}
-			//printf("%d", 0);
 			*byteIndexPtr -= 1;
 			return 0;
 		}
 	}
 }
 
+int getMessageSize(FILE *messageFP, char message[65536]){
+	int size = 0;
+	int currentChar;
+	while(1) {
+		if(size >= 65537) {
+			return -1;
+		} else {
+			currentChar = fgetc(messageFP);
+			if(currentChar == EOF) {
+				break;
+			} else {
+				message[size] = currentChar;
+				size += 1;
+			}
+		}
+
+	}
+	printf("Message size: %d\n", size);
+	return size;
+}
 
  
 void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
