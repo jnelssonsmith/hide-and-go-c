@@ -108,7 +108,6 @@ int getWidth(FILE *inputFP) {
 	int width = 0; 
 	while(1) {
 		currentChar = fgetc(inputFP);
-		//fputc(currentChar, outputFP);
 		if(isspace(currentChar)){
 			ungetc(currentChar, inputFP);
 			printf("Width: %d\n", width);
@@ -129,7 +128,6 @@ int getHeight(FILE *inputFP) {
 	int height = 0; 
 	while(1) {
 		currentChar = fgetc(inputFP);
-		//fputc(currentChar, outputFP);
 		if(isspace(currentChar)){
 			ungetc(currentChar, inputFP);
 			printf("Height: %d\n", height);
@@ -163,7 +161,6 @@ int getColourRange(FILE *inputFP) {
 				return colourRange;
 			}
 		} else {
-			//fputc(currentChar, outputFP);
 			colourRange = colourRange * 10 + (currentChar - 48);
 		}
 	}
@@ -249,20 +246,13 @@ void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
 		} else {
 			currentNum = fgetc(inputFP);
 			compareBit = currentNum % 2;
-			if(compareBit && bitToHide) {
-				// compareBit = 1 and bitToHide = 1
-				// dont do anything, bit is already there
-				fputc(currentNum, outputFP);
-			} else if (compareBit && !bitToHide) {
-				// compareBit = 1 and bitToHide = 0
+			if(compareBit && !bitToHide) {
 				fputc(currentNum - 1, outputFP);
 			} else if (!compareBit && bitToHide) {
-				// compareBit = 0 and bitToHide = 1
 				fputc(currentNum + 1, outputFP);
 			} else {
-				// compareBit = 0 and bitToHide = 0
-				// dont do anything bit is already there
 				fputc(currentNum, outputFP);
+			}
 		}
 	}
 
