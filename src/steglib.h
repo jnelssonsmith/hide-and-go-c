@@ -4,9 +4,10 @@
 int getMessageSize(FILE *messageFP, char message[]);
 int getNextBitToHide(int *byteIndexPtr);
 int canHideMessage(int width, int height, int messageSize);
-void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP);
+void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outputFP);
 void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP);
-
+int readSizeOfSecretMessage(FILE *inputFP);
+void readSecretMessage(int size, FILE *inputFP);
 #endif
 
 #ifndef FINISHED_WRITING_SECRET

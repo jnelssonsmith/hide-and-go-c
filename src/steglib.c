@@ -39,12 +39,7 @@ int getNextBitToHide(int *byteIndexPtr) {
 		return bitVal;
 
 	} else {
-		if(*byteIndexPtr == -1) {
-			return FINISHED_WRITING_SECRET;
-		} else {
-			*byteIndexPtr -= 1;
-			return 0;
-		}
+		return FINISHED_WRITING_SECRET;
 	}
 }
 
@@ -95,14 +90,18 @@ void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 }
 
 
-void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
-	int bitToHide, currentNum, currentVal, compareBit;
+void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outputFP){
+	int bitToHide, 
+		currentNum, 
+		currentVal, 
+		compareBit, 
+		currentChar;
+
 	printf("Hiding message...\n");
-	while(1) {
-		bitToHide = getNextBitToHide(byteIndexPtr);
-		if(bitToHide == FINISHED_WRITING_SECRET) {
-			break;
-		} else {
+	for(int i=0; i < messageSize; i++){
+		currentChar = message[i];
+		for(int j=7; j > -1; j--) {
+			bitToHide = currentChar >> j & 1;
 			currentNum = fgetc(inputFP);
 			compareBit = currentNum % 2;
 			if(compareBit && !bitToHide) {
@@ -125,4 +124,39 @@ void hideMessage(int *byteIndexPtr, FILE *inputFP, FILE *outputFP){
 	}
 
 	printf("Message hidden\n");
+}
+
+int readSizeOfSecretMessage(FILE *inputFP){
+	int currentNum, lastBit, size = 0;
+	printf("Message size found: ");
+	for(int i=15; i > -1; i--) {
+		currentNum = fgetc(inputFP);
+		lastBit = currentNum % 2;
+		printf("%d", lastBit);
+		size += lastBit << i;
+	}
+
+	printf(" or %d in decimal\n", size);
+	return size;
+}
+
+void readSecretMessage(int size, FILE *inputFP) {	
+	int currentNum, 
+		lastBit, 
+		currentChar = 0, 
+		bitPosition = 7,
+		numberOfBits = size * 8;
+	
+	for(int i=0; i < numberOfBits; i++) {
+		currentNum = fgetc(inputFP);
+		lastBit = currentNum % 2;
+		currentChar += lastBit << bitPosition;
+		bitPosition -= 1;
+
+		if(bitPosition < 0) {
+			fputc(currentChar, stdout);
+			bitPosition = 7;
+			currentChar = 0;
+		}
+	}
 }

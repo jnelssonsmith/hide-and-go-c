@@ -16,7 +16,8 @@ DESCRIPTION:
 int main(int argc, char **argv) {
 	
 	FILE *inputFP;	
-	
+	int size; 
+
 	if(argc != 2) {
 		printf("Incorrect number of arguments supplied, unhide expects 1 argument\n[1] path to a ppm file with a hidden message in it\n");
 		exit(EXIT_FAILURE);
@@ -29,8 +30,11 @@ int main(int argc, char **argv) {
 
 		if(isRawPPM(inputFP, NULL)){
 			scanToImageData(inputFP);
-            // size = readSizeOfSecretMessage(inputFP);
-            // readSecretMessage(size, inputFP);
+            size = readSizeOfSecretMessage(inputFP);
+            readSecretMessage(size, inputFP);
+    
+            fclose(inputFP);
+            exit(EXIT_SUCCESS);
 		} else {
 			printf("Incorrect file format detected, aborting\n");
 			exit(EXIT_FAILURE);
