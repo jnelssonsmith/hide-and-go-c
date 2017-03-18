@@ -1,5 +1,5 @@
-#ifndef HIDELIB_H_
-#define HIDELIB_H_
+#ifndef STEGLIB_H_
+#define STEGLIB_H_
 
 int getMessageSize(FILE *messageFP, char message[]);
 int getNextBitToHide(int *byteIndexPtr);

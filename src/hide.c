@@ -11,7 +11,7 @@ DESCRIPTION:
 #include <ctype.h>
 #include <math.h>
 #include "ppmlib.h"
-#include "hidelib.h"
+#include "steglib.h"
 
 
 int main(int argc, char **argv) {

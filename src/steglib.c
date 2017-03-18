@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
-#include "hidelib.h"
+#include "steglib.h"
 
 int canHideMessage(int width, int height, int messageSize) {
 	int availableBytes = width * height * 3;  // the number of bytes we have available to hide a message index
