@@ -1,7 +1,7 @@
  /*
 NAME: Joshua Nelsson-Smith
 START DATE: 10/03/17
-LAST MODIFIED: 18/03/17
+LAST MODIFIED: 21/03/17
 DESCRIPTION: 
 */
 
@@ -88,6 +88,11 @@ void scanToNextVal(FILE *inputFile, FILE *outputFile) {
 		if(isspace(temp)) {
 			if(outputFile != NULL) {
 				fputc(temp, outputFile);
+			}
+		} else if(temp == '#') {
+			temp = fgetc(inputFile);
+			while(temp != '\n') {
+				temp = fgetc(inputFile);
 			}
 		} else {
 			break;
