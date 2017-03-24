@@ -12,8 +12,8 @@ int canHideMessage(int width, int height, int messageSize) {
 	if(necessaryBits > availableBytes) {
 		return 0;
 	} else {
-		printf("Detected %d bytes to hide within\n", availableBytes);
-		printf("Detected %d bits to hide (16 bits for message size and %d bits for message itself)\n", necessaryBits, messageSize * 8);
+		fprintf(stderr, "Detected %d bytes to hide within\n", availableBytes);
+		fprintf(stderr, "Detected %d bits to hide (16 bits for message size and %d bits for message itself)\n", necessaryBits, messageSize * 8);
 		return 1;
 	}
 
@@ -27,7 +27,7 @@ int getNextBitToHide(int *byteIndexPtr) {
 	currentMessageChar = fgetc(stdin);
 	
 	if(currentMessageChar != EOF) {
-		printf("%c", currentMessageChar);
+		fprintf(stderr, "%c", currentMessageChar);
 
 		bitVal = currentMessageChar >> *byteIndexPtr & 1;
 
@@ -60,13 +60,13 @@ int getMessageSize(FILE *messageFP, char message[65536]){
 		}
 
 	}
-	printf("Message size: %d bytes (%d bits)\n", size, size * 8);
+	fprintf(stderr, "Message size: %d bytes (%d bits)\n", size, size * 8);
 	return size;
 }
 
 void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 	int mask, bitToHide, maskedMessageSize, currentNum, compareBit;
-	printf("Hiding size %d as 16 bits: ", messageSize);
+	fprintf(stderr, "Hiding size %d as 16 bits: ", messageSize);
 	for(int i=15; i > -1; i--) {
 		mask = 1 << i;
 		maskedMessageSize = messageSize & mask;
@@ -97,7 +97,7 @@ void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outp
 		compareBit, 
 		currentChar;
 
-	printf("Hiding message...\n");
+	fprintf(stderr, "Hiding message...\n");
 	for(int i=0; i < messageSize; i++){
 		currentChar = message[i];
 		for(int j=7; j > -1; j--) {
@@ -123,20 +123,20 @@ void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outp
 		}
 	}
 
-	printf("Message hidden\n");
+	fprintf(stderr, "Message hidden\n");
 }
 
 int readSizeOfSecretMessage(FILE *inputFP){
 	int currentNum, lastBit, size = 0;
-	printf("Message size found: ");
+	fprintf(stderr, "Message size found: ");
 	for(int i=15; i > -1; i--) {
 		currentNum = fgetc(inputFP);
 		lastBit = currentNum % 2;
-		printf("%d", lastBit);
+		fprintf(stderr, "%d", lastBit);
 		size += lastBit << i;
 	}
 
-	printf(" or %d in decimal\n", size);
+	fprintf(stderr, " or %d in decimal\n", size);
 	return size;
 }
 

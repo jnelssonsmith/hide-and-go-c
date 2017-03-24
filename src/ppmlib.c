@@ -13,9 +13,10 @@ DESCRIPTION:
 #include "ppmlib.h"
 
 int isRawPPM(FILE *inputFile, FILE *outputFile) {
+	scanToNextVal(inputFile, outputFile);
 	if (fgetc(inputFile) == 'P') {
 		if(fgetc(inputFile) == '6') {
-			printf("File type is raw PPM (P6)\n");
+			fprintf(stderr, "File type is raw PPM (P6)\n");
 			if(outputFile != NULL) {
 				fputc('P', outputFile);
 				fputc('6', outputFile);
@@ -34,7 +35,7 @@ int getWidth(FILE *inputFP) {
 		currentChar = fgetc(inputFP);
 		if(isspace(currentChar)){
 			ungetc(currentChar, inputFP);
-			printf("Width: %d\n", width);
+			fprintf(stderr, "Width: %d\n", width);
 			return width;
 		} else {
 			width = width * 10 + (currentChar - 48);
@@ -49,7 +50,7 @@ int getHeight(FILE *inputFP) {
 		currentChar = fgetc(inputFP);
 		if(isspace(currentChar)){
 			ungetc(currentChar, inputFP);
-			printf("Height: %d\n", height);
+			fprintf(stderr,"Height: %d\n", height);
 			return height;
 		} else {
 			height = height * 10 + (currentChar - 48);
@@ -65,13 +66,13 @@ int getColourRange(FILE *inputFP) {
 		currentChar = fgetc(inputFP);
 		if(isspace(currentChar)){
 			if(currentChar < 1) {
-				printf("Colour range value must be greater than 0, detected: %d", colourRange);
+				fprintf(stderr, "Colour range value must be greater than 0, detected: %d", colourRange);
 				exit(EXIT_FAILURE);
 			} else if (currentChar > 65535) {
-				printf("Colour range value must be less than 65546, detected: %d", colourRange);
+				fprintf(stderr, "Colour range value must be less than 65546, detected: %d", colourRange);
 				exit(EXIT_FAILURE);
 			} else {
-				printf("Colour range: 0 to %d\n", colourRange);
+				fprintf(stderr, "Colour range: 0 to %d\n", colourRange);
 				ungetc(currentChar, inputFP); //give back last grabbed value
 				return colourRange;
 			}
