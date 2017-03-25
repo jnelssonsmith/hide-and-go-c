@@ -1,7 +1,0 @@
-File type is raw PPM (P6)
-Width: 512
-Height: 512
-Colour range: 0 to 255
-Message size found: 0000000000111001 or 57 in decimal
-If you're reading this, it's too late :(
-Hellllloooooooo

@@ -19,30 +19,6 @@ int canHideMessage(int width, int height, int messageSize) {
 
 } 
 
-int getNextBitToHide(int *byteIndexPtr) {
-	
-	int currentMessageChar;
-	int bitVal;
-
-	currentMessageChar = fgetc(stdin);
-	
-	if(currentMessageChar != EOF) {
-		fprintf(stderr, "%c", currentMessageChar);
-
-		bitVal = currentMessageChar >> *byteIndexPtr & 1;
-
-		*byteIndexPtr -= 1;
-		if(*byteIndexPtr == -1) {
-			*byteIndexPtr = 7;
-		}
-
-		return bitVal;
-
-	} else {
-		return FINISHED_WRITING_SECRET;
-	}
-}
-
 int getMessageSize(FILE *messageFP, char message[65536]){
 	int size = 0;
 	int currentChar;
@@ -96,7 +72,8 @@ void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outp
 		currentVal, 
 		compareBit, 
 		currentChar;
-
+	
+	hideMessageSize(messageSize, inputFP, outputFP);
 	fprintf(stderr, "Hiding message...\n");
 	for(int i=0; i < messageSize; i++){
 		currentChar = message[i];

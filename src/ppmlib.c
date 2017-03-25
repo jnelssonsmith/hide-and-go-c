@@ -27,7 +27,7 @@ int isRawPPM(FILE *inputFile, FILE *outputFile) {
 
 	return 0;
 }
-
+ 
 int getWidth(FILE *inputFP) {
 	int currentChar;
 	int width = 0; 
@@ -68,8 +68,8 @@ int getColourRange(FILE *inputFP) {
 			if(currentChar < 1) {
 				fprintf(stderr, "Colour range value must be greater than 0, detected: %d", colourRange);
 				exit(EXIT_FAILURE);
-			} else if (currentChar > 65535) {
-				fprintf(stderr, "Colour range value must be less than 65546, detected: %d", colourRange);
+			} else if (currentChar > 255) {
+				fprintf(stderr, "Colour range value must be less than 256, detected: %d", colourRange);
 				exit(EXIT_FAILURE);
 			} else {
 				fprintf(stderr, "Colour range: 0 to %d\n", colourRange);

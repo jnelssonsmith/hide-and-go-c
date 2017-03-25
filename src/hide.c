@@ -66,7 +66,6 @@ int main(int argc, char **argv) {
 			}
 
 			if(canHideMessage(width, height, messageSize)){
-				hideMessageSize(messageSize, inputFP, outputFP);
 				hideMessage(messageSize, message, inputFP, outputFP);
 			} else {
 				printf("Message is too large for given file, please use a smaller message or a larger file\n");
