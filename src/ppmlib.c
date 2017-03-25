@@ -91,9 +91,18 @@ void scanToNextVal(FILE *inputFile, FILE *outputFile) {
 				fputc(temp, outputFile);
 			}
 		} else if(temp == '#') {
+			if(outputFile != NULL) {
+				fputc(temp, outputFile);
+			}
 			temp = fgetc(inputFile);
+			if(outputFile != NULL) {
+				fputc(temp, outputFile);
+			}
 			while(temp != '\n') {
 				temp = fgetc(inputFile);
+				if(outputFile != NULL) {
+					fputc(temp, outputFile);
+				}
 			}
 		} else {
 			break;
@@ -110,5 +119,5 @@ void scanToImageData(FILE *inputFP) {
 	getHeight(inputFP);
 	scanToNextVal(inputFP, NULL);
     getColourRange(inputFP);
-	scanToNextVal(inputFP, NULL);
+	fgetc(inputFP); // should only be one white space character between raster and 
 }

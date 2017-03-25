@@ -1,7 +1,7 @@
  /*
 NAME: Joshua Nelsson-Smith
 START DATE: 10/03/17
-LAST MODIFIED: 18/03/17
+LAST MODIFIED: 25/03/17
 DESCRIPTION: 
 */
 
@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
 	int width;
 	int colourRange;
 	int scanCount;
+	int maxSizeSupportedByImage;
 
 	int byteIndex = 7;
 	int *byteIndexPtr = &byteIndex;
@@ -35,7 +36,7 @@ int main(int argc, char **argv) {
 	} else {
 		inputFP = fopen(argv[1], "rb");
 		if (inputFP == NULL) {
-			printf("Could not open supplied file: %s\n", argv[1]);
+			fprintf(stderr, "Could not open supplied file: %s\n", argv[1]);
 			exit(EXIT_FAILURE);
 		}
 
@@ -56,21 +57,19 @@ int main(int argc, char **argv) {
 
 			colourRange = getColourRange(inputFP);
 			fprintf(outputFP, "%d", colourRange);
-			
-			scanToNextVal(inputFP, outputFP);
+			int temp = fgetc(inputFP); // just get one white space character
+			fputc(temp, outputFP);
+			//scanToNextVal(inputFP, outputFP);
 
-			messageSize = getMessageSize(stdin, message);
+			/*messageSize = getMessageSize(stdin, message);
 			if(messageSize == -1) {
-				printf("Message too large, hide only supports messages smaller than 65536 bytes\n");
+				fprintf(stderr, "Message too large, hide only supports messages smaller than 65536 bytes\n");
 				exit(EXIT_FAILURE);
 			}
+			*/
+			maxSizeSupportedByImage = getSupportedImageBytes(width, height);
+			hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
 
-			if(canHideMessage(width, height, messageSize)){
-				hideMessage(messageSize, message, inputFP, outputFP);
-			} else {
-				printf("Message is too large for given file, please use a smaller message or a larger file\n");
-				exit(EXIT_FAILURE);
-			}
 		} else {
 			printf("Incorrect file format detected, aborting\n");
 			exit(EXIT_FAILURE);

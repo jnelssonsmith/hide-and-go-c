@@ -5,8 +5,10 @@
 #include <math.h>
 #include "steglib.h"
 
-int canHideMessage(int width, int height, int messageSize) {
+int getSupportedImageBytes(int width, int height) {
 	int availableBytes = width * height * 3;  // the number of bytes we have available to hide a message index
+	
+	/*
 	int necessaryBytes = messageSize + 2; // includes the 2 bytes we use for the integer 
 	int necessaryBits = necessaryBytes * 8;
 	if(necessaryBits > availableBytes) {
@@ -16,9 +18,13 @@ int canHideMessage(int width, int height, int messageSize) {
 		fprintf(stderr, "Detected %d bits to hide (16 bits for message size and %d bits for message itself)\n", necessaryBits, messageSize * 8);
 		return 1;
 	}
+	*/
+
+	return availableBytes;
 
 } 
 
+/*
 int getMessageSize(FILE *messageFP, char message[65536]){
 	int size = 0;
 	int currentChar;
@@ -39,11 +45,12 @@ int getMessageSize(FILE *messageFP, char message[65536]){
 	fprintf(stderr, "Message size: %d bytes (%d bits)\n", size, size * 8);
 	return size;
 }
+*/
 
 void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 	int mask, bitToHide, maskedMessageSize, currentNum, compareBit;
-	fprintf(stderr, "Hiding size %d as 16 bits: ", messageSize);
-	for(int i=15; i > -1; i--) {
+	fprintf(stderr, "Hiding size %d as 32 bits: ", messageSize);
+	for(int i=31; i > -1; i--) {
 		mask = 1 << i;
 		maskedMessageSize = messageSize & mask;
 		bitToHide = maskedMessageSize >> i;
@@ -59,6 +66,7 @@ void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 			fputc(currentNum, outputFP);
 		}
 
+		
 		printf("%d", bitToHide);
 	}
 
@@ -66,17 +74,27 @@ void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 }
 
 
-void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outputFP){
+void hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP){
 	int bitToHide, 
 		currentNum, 
 		currentVal, 
 		compareBit, 
-		currentChar;
+		currentChar,
+		messageSize = 0;
+	long positionInFile;
+
+	positionInFile = ftell(inputFP);
+	fprintf(stderr, "pos before: %lu\n", positionInFile);
 	
-	hideMessageSize(messageSize, inputFP, outputFP);
+	
+	for(int i=0; i < 32; i++){
+		currentVal = fgetc(inputFP);
+		fputc(currentVal, outputFP);
+	}
+
 	fprintf(stderr, "Hiding message...\n");
-	for(int i=0; i < messageSize; i++){
-		currentChar = message[i];
+	currentChar = fgetc(stdin);
+	while(currentChar != EOF) {
 		for(int j=7; j > -1; j--) {
 			bitToHide = currentChar >> j & 1;
 			currentNum = fgetc(inputFP);
@@ -89,6 +107,16 @@ void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outp
 				fputc(currentNum, outputFP);
 			}
 		}
+
+		currentChar = fgetc(stdin);
+		messageSize += 1;
+		if(messageSize > 2147483647) {
+			fprintf(stderr, "Message is too large, max size supported is 2GB\n");
+			exit(EXIT_FAILURE);
+		} else if (messageSize > maxSizeSupportedByImage) {
+			fprintf(stderr, "Message is too large for given file\n");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	while (inputFP) {
@@ -98,7 +126,13 @@ void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outp
 		} else {
 			fputc(currentVal, outputFP);
 		}
-	}
+	}	
+
+	fseek(inputFP, positionInFile, SEEK_SET);
+	fseek(outputFP, positionInFile, SEEK_SET);
+	positionInFile = ftell(inputFP);
+	fprintf(stderr, "pos after: %lu\n", positionInFile);
+	hideMessageSize(messageSize, inputFP, outputFP);
 
 	fprintf(stderr, "Message hidden\n");
 }
@@ -106,7 +140,7 @@ void hideMessage(int messageSize, char message[65536], FILE *inputFP, FILE *outp
 int readSizeOfSecretMessage(FILE *inputFP){
 	int currentNum, lastBit, size = 0;
 	fprintf(stderr, "Message size found: ");
-	for(int i=15; i > -1; i--) {
+	for(int i=31; i > -1; i--) {
 		currentNum = fgetc(inputFP);
 		lastBit = currentNum % 2;
 		fprintf(stderr, "%d", lastBit);

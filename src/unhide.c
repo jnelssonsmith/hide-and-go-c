@@ -19,12 +19,12 @@ int main(int argc, char **argv) {
 	int size; 
 
 	if(argc != 2) {
-		printf("Incorrect number of arguments supplied, unhide expects 1 argument\n[1] path to a ppm file with a hidden message in it\n");
+		fprintf(stderr, "Incorrect number of arguments supplied, unhide expects 1 argument\n[1] path to a ppm file with a hidden message in it\n");
 		exit(EXIT_FAILURE);
 	} else {
 		inputFP = fopen(argv[1], "rb");
 		if (inputFP == NULL) {
-			printf("Could not open supplied file: %s\n", argv[1]);
+			fprintf(stderr, "Could not open supplied file: %s\n", argv[1]);
 			exit(EXIT_FAILURE);
 		}
 
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
             fclose(inputFP);
             exit(EXIT_SUCCESS);
 		} else {
-			printf("Incorrect file format detected, aborting\n");
+			fprintf(stderr, "Incorrect file format detected, aborting\n");
 			exit(EXIT_FAILURE);
 		}
 
