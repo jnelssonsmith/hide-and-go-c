@@ -9,13 +9,19 @@ when dealing with the hiding and reading of secret messages in files.
 #define STEGLIB_H_
 
 
+/*
+getSupportedImageBytes is a function returns the number of available bytes the given image has to hide within. 
+To calculate the number of bytes in the image we can hide within we only need to take in the width and height of 
+the image as inputs. Because an image is composed of pixel values the max number of bytes to hide within is 
+width x height x 3.  
+*/
 int getSupportedImageBytes(int width, int height);
 
 /*
 canHideMessage is a function that tells you whether or not a given message will fit in a
 ppm file based on the width and height defined in the file. A file will have width x height 
 pixels to hide in. 
-If the message can fit it will return 1, otherwise it will return 0.
+If the message can fit it will return MESSAGE_WRITE_SUCCESS, otherwise it will return MESSAGE_WRITE_ERROR.
 The inputs are the size of the message you want to hide in bytes and the 
 max size supported by the image
 */
@@ -26,7 +32,7 @@ hideMessage is a function that hides a given message inside the rgb values of a 
 manipulated values into an output file.
 It splits up the input message into chars, and each char into the 8 bits that represent a char, and hides 
 each of those bits inside the last bit of an r,g or b value. 
-This function does not return anything.
+This function does not returns either a MESSAGE_WRITE_ERROR or MESSAGE_WRITE_SUCCESS
 The function takes message size as an input so it knows when to stop writing the secret, 
 it also takes in the message to write, an input file to read the rgb values to alter and an output file pointer 
 to write the values to. 
@@ -59,4 +65,14 @@ inputs
 */
 void readSecretMessage(int size, FILE *inputFP);
 
+#endif
+
+
+// These two definitions make the code more readable and can be used for signalling to the calling functions 
+#ifndef MESSAGE_WRITE_SUCCESS
+#define MESSAGE_WRITE_SUCCESS	0
+#endif
+
+#ifndef MESSAGE_WRITE_ERROR
+#define MESSAGE_WRITE_ERROR		1
 #endif

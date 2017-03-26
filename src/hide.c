@@ -28,14 +28,6 @@ constitutes a failed and a successful finish of execution
 #define EXIT_FAILURE	1
 #endif
 
-/*
-To ensure the program exits gracefully (doesn't leave half written to files or leave things open) 
-we define a custom exit gracefully function. It is useful because if for some reason the program fails 
-during some step of execution with the output file being created, we will be left with a half written to 
-file. This function attempts to cover up any of our evil deeds should they fail, otherwise it does the busy work
-of ensuring files are closed and the correct exit signal is broadcast. 
-*/
-void exitGracefully(int error, char fileName[], FILE *inputFP, FILE *outputFP);
 
 int main(int argc, char **argv) {
 	
@@ -47,67 +39,63 @@ int main(int argc, char **argv) {
 		width,					  // the read width of the ppm image
 		colourRange,			  // the read colour range of the ppm image (the range of values each pixel can take)
 		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
-		error;				  // an error storing variable, 0 on error, 1 on no error
+		error;				      // an error storing variable, 1 on error, 0 on no error
+	
 
+	// we kill the program if an incorrect number of args is provided
 	if(argc != 3) {
 		printf("Incorrect number of arguments supplied, hide expects 2 arguments\n[1] path to ppm file to hide a message in\n[2] a name for the output ppm file\n");
-		exitGracefully(EXIT_FAILURE, "", NULL, NULL);
-	} else {
-		inputFP = fopen(argv[1], "rb");
-		if (inputFP == NULL) {
-			fprintf(stderr, "Could not open supplied file: %s\n", argv[1]);
-			exit(EXIT_FAILURE);
-		}
-
-		outputFP = fopen(argv[2], "wb");
-
-		if(isRawPPM(inputFP, outputFP)){
-			scanToNextVal(inputFP, outputFP);
-			
-			width = getWidth(inputFP);
-			fprintf(outputFP, "%d", width);
-
-			scanToNextVal(inputFP, outputFP);
-
-			height = getHeight(inputFP);
-			fprintf(outputFP, "%d", height);
-
-			scanToNextVal(inputFP, outputFP);
-
-			colourRange = getColourRange(inputFP);
-			fprintf(outputFP, "%d", colourRange);
-			temp = fgetc(inputFP); // just get one white space character
-			fputc(temp, outputFP);
-			
-			maxSizeSupportedByImage = getSupportedImageBytes(width, height);
-			error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
-			exitGracefully(error, argv[2], inputFP, outputFP);
-			
-		} else {
-			printf("Incorrect file format detected, aborting\n");
-			exitGracefully(EXIT_FAILURE, argv[2], inputFP, outputFP);
-		}
-
-		
-	}
-}
-
-void exitGracefully(int error, char fileName[], FILE *inputFP, FILE *outputFP) {
-	if(inputFP != NULL){
-		fclose(inputFP);
-	}
-
-	if (outputFP != NULL) {
-		fclose(outputFP);
-	}
-
-	if(!error) { 
-		exit(EXIT_SUCCESS);
-	} else {
 		exit(EXIT_FAILURE);
-		if(fileName != "") {
-			remove(fileName);
-		}
-		
 	}
+
+	inputFP = fopen(argv[1], "rb");
+
+	// kill program if input is not defined
+	if (inputFP == NULL) {
+		fprintf(stderr, "Could not open supplied file: %s\n", argv[1]);
+		exit(EXIT_FAILURE);
+	}
+
+	outputFP = fopen(argv[2], "wb");
+	
+	// handle check to ensure correct PPM file type
+	error = isRawPPM(inputFP, outputFP);
+	if(error) {
+		printf("Incorrect file format detected, aborting\n");
+		exitGracefully(error, argv[2], inputFP, outputFP);
+	}
+	
+	// scan through width, heigh and colour range values
+	scanToNextVal(inputFP, outputFP);
+	
+	width = getWidth(inputFP);
+	fprintf(outputFP, "%d", width);
+	
+	scanToNextVal(inputFP, outputFP);
+	
+	height = getHeight(inputFP);
+	fprintf(outputFP, "%d", height);
+
+	scanToNextVal(inputFP, outputFP);
+	
+	colourRange = getColourRange(inputFP);
+	if(colourRange == PPM_COLOUR_READ_ERROR) {
+		exitGracefully(PPM_READ_ERROR, argv[2], inputFP, outputFP);
+	}
+	fprintf(outputFP, "%d", colourRange);
+	
+	// from the ppm spec we know there can only be 1 white space character between colour range and pixel raster
+	temp = fgetc(inputFP); 
+	fputc(temp, outputFP);
+	
+
+	maxSizeSupportedByImage = getSupportedImageBytes(width, height);
+
+
+	/* now we can hide the message, the fail state is caught in the error variable, regardless of if the hide 
+	   is successful or not we exit gracefully because it is the last thing we need to do */
+	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
+
+	exitGracefully(error, argv[2], inputFP, outputFP);
 }
+

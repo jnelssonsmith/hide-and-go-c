@@ -11,7 +11,7 @@ could easily be extended to include functions to handle P3 format PPMs.
 
 /*
 isRawPPM calculates whether a given file is a valid PPM format (P6). 
-If it is valid it returns true, otherwise it returns false. 
+If it is successful then it returns PPM_READ_SUCCESS otherwise PPM_READ_ERROR
 The inputs are the input file to read from, and the output file to write to. 
 Should you not want to write to an output file, you can simply pass in NULL as the 
 output file. 
@@ -54,8 +54,31 @@ void scanToNextVal(FILE *inputFile, FILE *outputFile);
 /*
 scanToImageData is a useful function to use if you need to just scan to the section of a ppm that contains 
 the colour raster. It makes use of all of the functions above and leaves the file pointer at the start of the 
-raster. If there is any errors it will <EXIT WORK>
+raster.
 */
 void scanToImageData(FILE *inputFP);
 
+/*
+To ensure the program exits gracefully (doesn't leave half written to files or leave things open) 
+we define a custom exit gracefully function. It is useful because if for some reason the program fails 
+during some step of execution with the output file being created, we will be left with a half written to 
+file. This function attempts to cover up any of our evil deeds should they fail, otherwise it does the busy work
+of ensuring files are closed and the correct exit signal is broadcast. 
+*/
+void exitGracefully(int error, char fileName[], FILE *inputFP, FILE *outputFP);
+
+#endif
+
+// These three definitions make the code more readable and can be used for signalling to the calling functions 
+#ifndef PPM_READ_SUCCESS
+#define PPM_READ_SUCCESS	     0
+#endif
+
+#ifndef PPM_READ_ERROR
+#define PPM_READ_ERROR		     1
+#endif
+
+// need to use -1 for this because can't use the usual 1 and 0 for error checking
+#ifndef PPM_COLOUR_READ_ERROR
+#define PPM_COLOUR_READ_ERROR   -1
 #endif
