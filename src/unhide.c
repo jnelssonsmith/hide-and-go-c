@@ -2,7 +2,8 @@
 NAME: Joshua Nelsson-Smith
 START DATE: 10/03/17
 LAST MODIFIED: 18/03/17
-DESCRIPTION: 
+DESCRIPTION: unhide is a program that reads in a ppm image with a hidden message 
+and returns the hidden message to standard output. 
 */
 
 #include <stdio.h>
@@ -44,6 +45,5 @@ int main(int argc, char **argv) {
 		exit(EXIT_SUCCESS);
 	}
 }
-
 
 
