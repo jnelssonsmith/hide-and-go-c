@@ -13,6 +13,8 @@ DESCRIPTION:
 #include "ppmlib.h"
 #include "steglib.h"
 
+void exitGracefully(int noError, char fileName[]);
+
 int main(int argc, char **argv) {
 	
 	FILE *inputFP;
@@ -28,6 +30,8 @@ int main(int argc, char **argv) {
 
 	int byteIndex = 7;
 	int *byteIndexPtr = &byteIndex;
+
+	
 	
 	
 	if(argc != 3) {
@@ -59,27 +63,27 @@ int main(int argc, char **argv) {
 			fprintf(outputFP, "%d", colourRange);
 			int temp = fgetc(inputFP); // just get one white space character
 			fputc(temp, outputFP);
-			//scanToNextVal(inputFP, outputFP);
-
-			/*messageSize = getMessageSize(stdin, message);
-			if(messageSize == -1) {
-				fprintf(stderr, "Message too large, hide only supports messages smaller than 65536 bytes\n");
-				exit(EXIT_FAILURE);
-			}
-			*/
+			
 			maxSizeSupportedByImage = getSupportedImageBytes(width, height);
-			hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
-
+			int noError = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
+			exitGracefully(noError, argv[2]);
+			
 		} else {
 			printf("Incorrect file format detected, aborting\n");
-			exit(EXIT_FAILURE);
+			exitGracefully(0, argv[2]);
 		}
 
-		fclose(inputFP);
-		fclose(outputFP);
-		exit(EXIT_SUCCESS);
+		
 	}
 }
 
 
 
+void exitGracefully(int noError, char fileName[]) {
+	if(noError) { 
+		exit(EXIT_SUCCESS);
+	} else {
+		remove(fileName);
+		exit(EXIT_FAILURE);
+	}
+}
