@@ -11,9 +11,9 @@ output it as a file with the name given by the second argument.
 
 #include <stdio.h>
 #include <stdlib.h> 
+#include <argp.h>
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
-
 
 /* 
 These are usually defined but just in case the test computers use some weird setup we 
@@ -28,11 +28,78 @@ constitutes a failed and a successful finish of execution
 #define EXIT_FAILURE	1
 #endif
 
+/*
+choices are
+
+hide inputPPM outputPPM
+hide -m numberOfFiles inputBasename outputBasename
+hide -p instructionFile
+hide -s inputPPM outputPPM
+*/
+
+const char *argp_program_version = "hide 1.0";
+
+const char *argp_program_bug_address = "https://github.com/Joshua-Xavier/hide-and-go-c/issues/new";
+
+struct arguments {
+  char *args[2];            			/* inputPPM and outputPPM */
+  char *numberOfFiles;      		    /* Argument for -m */
+  char *instructionFile;    			/* Argument for -p */
+  int sideBySide; 						/* Indicates precence of -s flag */
+};
+
+static struct argp_option options[] =
+{
+  {"multi", 'm', "numberOfFiles", 0, "Hide message across numberOfFiles files"},
+  {"process", 'p', "instructionFile", 0, "use instructionFile as an instruction file for processing many ppm messages"},
+  {"sideBySide", 's', 0, 0, "Show the input and output ppm files side by side"},
+  {0}
+};
+
+static error_t
+parse_opt (int key, char *arg, struct argp_state *state)
+{
+  struct arguments *arguments = state->input;
+
+  switch (key)
+    {
+    case 'm':
+      arguments->numberOfFiles = arg;
+      break;
+    case 'p':
+      arguments->instructionFile = arg;
+      break;
+    case 's':
+      arguments->sideBySide = 1;
+      break;
+    case ARGP_KEY_ARG:
+      if (state->arg_num >= 2) {
+	  	argp_usage(state);
+	  }
+      arguments->args[state->arg_num] = arg;
+      break;
+    case ARGP_KEY_END:
+      if (state->arg_num < 2)
+	{
+	  argp_usage (state);
+	}
+      break;
+    default:
+      return ARGP_ERR_UNKNOWN;
+    }
+  return 0;
+}
+
+static char args_doc[] = "inputPPM ouputPPM";
+static char doc[] = "hide -- Simple explanation here..";
+static struct argp argp = {options, parse_opt, args_doc, doc};
 
 int main(int argc, char **argv) {
 	
 	FILE *inputFP,	// the file pointer to the input ppm image
 		 *outputFP; // the file pointer to the output ppm image with the hidden message inside
+	
+	struct arguments arguments;
 	
 	int temp, 					  // used for processing chars
 		height,					  // the read height of the ppm image
@@ -41,6 +108,16 @@ int main(int argc, char **argv) {
 		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
 		error;				      // an error storing variable, 1 on error, 0 on no error
 	
+	arguments.sideBySide = 0;
+	arguments.numberOfFiles = "";
+	arguments.instructionFile = "";
+
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+	printf("-s flag is set to %d\n", arguments.sideBySide);
+	printf("-m flag got: %s\n", arguments.numberOfFiles);
+	printf("-p flag got: %s\n", arguments.instructionFile);
+
 
 	// we kill the program if an incorrect number of args is provided
 	if(argc != 3) {
