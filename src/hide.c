@@ -12,6 +12,7 @@ output it as a file with the name given by the second argument.
 #include <stdio.h>
 #include <stdlib.h> 
 #include <argp.h>
+#include <unistd.h>
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
 
@@ -42,10 +43,10 @@ const char *argp_program_version = "hide 1.0";
 const char *argp_program_bug_address = "https://github.com/Joshua-Xavier/hide-and-go-c/issues/new";
 
 struct arguments {
-  char *args[2];            			/* inputPPM and outputPPM */
-  char *numberOfFiles;      		    /* Argument for -m */
-  char *instructionFile;    			/* Argument for -p */
-  int sideBySide; 						/* Indicates precence of -s flag */
+  char *args[2];            		/* inputPPM and outputPPM */
+  int numberOfFiles;      		  /* Argument for -m */
+  char *instructionFile;    		/* Argument for -p */
+  int sideBySide; 							/* Indicates precence of -s flag */
 };
 
 static struct argp_option options[] =
@@ -56,34 +57,40 @@ static struct argp_option options[] =
   {0}
 };
 
-static error_t
-parse_opt (int key, char *arg, struct argp_state *state)
-{
+int flagNum = 0;
+
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   struct arguments *arguments = state->input;
 
-  switch (key)
-    {
+  switch (key) {
     case 'm':
-      arguments->numberOfFiles = arg;
+			flagNum += 1;
+			arguments->numberOfFiles = atoi(arg);
       break;
+
     case 'p':
+			flagNum += 1;
       arguments->instructionFile = arg;
-      break;
+			return ARGP_KEY_SUCCESS; 						// the p flag only takes one arg and doesnt use input and output so we leave early
+			
     case 's':
+			flagNum += 1;
       arguments->sideBySide = 1;
       break;
+
     case ARGP_KEY_ARG:
       if (state->arg_num >= 2) {
-	  	argp_usage(state);
-	  }
+	  		argp_usage(state);
+	  	}
       arguments->args[state->arg_num] = arg;
       break;
+
     case ARGP_KEY_END:
-      if (state->arg_num < 2)
-	{
-	  argp_usage (state);
-	}
+      if (state->arg_num < 2){
+	  		argp_usage (state);
+			}
       break;
+			
     default:
       return ARGP_ERR_UNKNOWN;
     }
@@ -97,33 +104,35 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 int main(int argc, char **argv) {
 	
 	FILE *inputFP,	// the file pointer to the input ppm image
-		 *outputFP; // the file pointer to the output ppm image with the hidden message inside
+		 	 *outputFP; // the file pointer to the output ppm image with the hidden message inside
 	
 	struct arguments arguments;
 	
-	int temp, 					  // used for processing chars
-		height,					  // the read height of the ppm image
-		width,					  // the read width of the ppm image
-		colourRange,			  // the read colour range of the ppm image (the range of values each pixel can take)
+	int temp, 					  			// used for processing chars
+		height,					  				// the read height of the ppm image
+		width,					  				// the read width of the ppm image
+		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
 		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
-		error;				      // an error storing variable, 1 on error, 0 on no error
+		error;				      			// an error storing variable, 1 on error, 0 on no error
 	
 	arguments.sideBySide = 0;
-	arguments.numberOfFiles = "";
-	arguments.instructionFile = "";
+	arguments.numberOfFiles = 0;
+	arguments.instructionFile = "(notSupplied)";
+	arguments.args[0] = "(notSupplied)";
+	arguments.args[1] = "(notSupplied)";
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-	printf("-s flag is set to %d\n", arguments.sideBySide);
-	printf("-m flag got: %s\n", arguments.numberOfFiles);
-	printf("-p flag got: %s\n", arguments.instructionFile);
-
-
-	// we kill the program if an incorrect number of args is provided
-	if(argc != 3) {
-		printf("Incorrect number of arguments supplied, hide expects 2 arguments\n[1] path to ppm file to hide a message in\n[2] a name for the output ppm file\n");
+	if(flagNum > 1) {
+		printf("Too many flags supplied\n");
 		exit(EXIT_FAILURE);
-	}
+	} 
+
+	printf("-s flag is set to %d\n", arguments.sideBySide);
+	printf("-m flag got: %d\n", arguments.numberOfFiles);
+	printf("-p flag got: %s\n", arguments.instructionFile);
+	printf("inputPPM is: %s\n", arguments.args[0]);
+	printf("outputPPM is: %s\n", arguments.args[1]);
 
 	inputFP = fopen(argv[1], "rb");
 
