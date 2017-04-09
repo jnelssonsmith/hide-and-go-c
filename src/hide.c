@@ -57,24 +57,37 @@ static struct argp_option options[] =
   {0}
 };
 
-int flagNum = 0;
+int flagType = '0';
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
   struct arguments *arguments = state->input;
 
   switch (key) {
     case 'm':
-			flagNum += 1;
+			if(flagType != '0') {
+				flagType = -1;
+			} else {
+				flagType = 'm';
+			} 
+
 			arguments->numberOfFiles = atoi(arg);
       break;
 
     case 'p':
-			flagNum += 1;
+			if(flagType != '0') {
+				flagType = -1;
+			} else {
+				flagType = 'p';
+			}
       arguments->instructionFile = arg;
 			return ARGP_KEY_SUCCESS; 						// the p flag only takes one arg and doesnt use input and output so we leave early
 			
     case 's':
-			flagNum += 1;
+			if(flagType != '0') {
+				flagType = -1;
+			} else {
+				flagType = 's';
+			}
       arguments->sideBySide = 1;
       break;
 
@@ -123,18 +136,27 @@ int main(int argc, char **argv) {
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-	if(flagNum > 1) {
-		printf("Too many flags supplied\n");
-		exit(EXIT_FAILURE);
-	} 
+	switch(flagType) {
+		case 's':
+			printf("s flag detected\n");
+			break;
+		case 'p':
+			printf("p flag detected\n");
+			break;
+		case 'm':
+			printf("m flag detected\n");
+			break;
+		case '0':
+			printf("no flags detected\n");
+			break;
+		default:
+			printf("Too many flags detected\nHide only supports 1 flag at a time or no flags\n");
+			exit(EXIT_FAILURE);
+	}
+	
 
-	printf("-s flag is set to %d\n", arguments.sideBySide);
-	printf("-m flag got: %d\n", arguments.numberOfFiles);
-	printf("-p flag got: %s\n", arguments.instructionFile);
-	printf("inputPPM is: %s\n", arguments.args[0]);
-	printf("outputPPM is: %s\n", arguments.args[1]);
-
-	inputFP = fopen(argv[1], "rb");
+	
+	inputFP = fopen(arguments.args[0], "rb");
 
 	// kill program if input is not defined
 	if (inputFP == NULL) {
@@ -142,6 +164,7 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	
 	outputFP = fopen(argv[2], "wb");
 	
 	// handle check to ensure correct PPM file type
