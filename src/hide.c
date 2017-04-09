@@ -13,8 +13,18 @@ output it as a file with the name given by the second argument.
 #include <stdlib.h> 
 #include <argp.h>
 #include <unistd.h>
+
+struct arguments {
+  int numberOfFiles;      		  /* Argument for -m */
+  char *instructionFile;    		/* Argument for -p */
+  int sideBySide; 							/* Indicates precence of -s flag */
+	char *inputPPM;
+	char *outputPPM;
+};
+
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
+#include "hideUtils.h" 
 
 /* 
 These are usually defined but just in case the test computers use some weird setup we 
@@ -38,16 +48,10 @@ hide -p instructionFile
 hide -s inputPPM outputPPM
 */
 
+
 const char *argp_program_version = "hide 1.0";
 
 const char *argp_program_bug_address = "https://github.com/Joshua-Xavier/hide-and-go-c/issues/new";
-
-struct arguments {
-  char *args[2];            		/* inputPPM and outputPPM */
-  int numberOfFiles;      		  /* Argument for -m */
-  char *instructionFile;    		/* Argument for -p */
-  int sideBySide; 							/* Indicates precence of -s flag */
-};
 
 static struct argp_option options[] =
 {
@@ -95,7 +99,12 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
       if (state->arg_num >= 2) {
 	  		argp_usage(state);
 	  	}
-      arguments->args[state->arg_num] = arg;
+
+			if(state->arg_num == 0) {
+				 arguments->inputPPM = arg;
+			} else if (state->arg_num == 1) {
+				 arguments->outputPPM = arg;
+			}
       break;
 
     case ARGP_KEY_END:
@@ -128,83 +137,38 @@ int main(int argc, char **argv) {
 		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
 		error;				      			// an error storing variable, 1 on error, 0 on no error
 	
+	// set program defaults here
 	arguments.sideBySide = 0;
-	arguments.numberOfFiles = 0;
+	arguments.numberOfFiles = 1; 										// by default number of files message can be written across is 1
 	arguments.instructionFile = "(notSupplied)";
-	arguments.args[0] = "(notSupplied)";
-	arguments.args[1] = "(notSupplied)";
+	arguments.inputPPM = "(notSupplied)";
+	arguments.outputPPM = "(notSupplied)";
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
+	printf("%s\n", arguments.inputPPM);
+	printf("%s\n", arguments.outputPPM);
+
 	switch(flagType) {
 		case 's':
-			printf("s flag detected\n");
+			fprintf(stderr, "s flag detected\n");
 			break;
 		case 'p':
-			printf("p flag detected\n");
+			fprintf(stderr, "p flag detected\n");
 			break;
 		case 'm':
-			printf("m flag detected\n");
+			fprintf(stderr, "m flag detected\n");
 			break;
 		case '0':
-			printf("no flags detected\n");
+			fprintf(stderr, "no flags detected\n");
+			standardHideMessage(arguments);
 			break;
+	
 		default:
 			printf("Too many flags detected\nHide only supports 1 flag at a time or no flags\n");
 			exit(EXIT_FAILURE);
 	}
-	
 
-	
-	inputFP = fopen(arguments.args[0], "rb");
-
-	// kill program if input is not defined
-	if (inputFP == NULL) {
-		fprintf(stderr, "Could not open supplied file: %s\n", argv[1]);
-		exit(EXIT_FAILURE);
-	}
-
-	
-	outputFP = fopen(argv[2], "wb");
-	
-	// handle check to ensure correct PPM file type
-	error = isRawPPM(inputFP, outputFP);
-	if(error) {
-		printf("Incorrect file format detected, aborting\n");
-		exitGracefully(error, argv[2], inputFP, outputFP);
-	}
-	
-	// scan through width, heigh and colour range values
-	scanToNextVal(inputFP, outputFP);
-	
-	width = getWidth(inputFP);
-	fprintf(outputFP, "%d", width);
-	
-	scanToNextVal(inputFP, outputFP);
-	
-	height = getHeight(inputFP);
-	fprintf(outputFP, "%d", height);
-
-	scanToNextVal(inputFP, outputFP);
-	
-	colourRange = getColourRange(inputFP);
-	if(colourRange == PPM_COLOUR_READ_ERROR) {
-		exitGracefully(PPM_READ_ERROR, argv[2], inputFP, outputFP);
-	}
-	fprintf(outputFP, "%d", colourRange);
-	
-	// from the ppm spec we know there can only be 1 white space character between colour range and pixel raster
-	temp = fgetc(inputFP); 
-	fputc(temp, outputFP);
-	
-
-	maxSizeSupportedByImage = getSupportedImageBytes(width, height);
-
-
-	/* now we can hide the message, the fail state is caught in the error variable, regardless of if the hide 
-	   is successful or not we exit gracefully because it is the last thing we need to do */
-	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
-
-	exitGracefully(error, argv[2], inputFP, outputFP);
+	exit(EXIT_SUCCESS);
 }
 
