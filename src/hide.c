@@ -11,16 +11,7 @@ output it as a file with the name given by the second argument.
 
 #include <stdio.h>
 #include <stdlib.h> 
-#include <argp.h>
 #include <unistd.h>
-
-struct arguments {
-  int numberOfFiles;      		  /* Argument for -m */
-  char *instructionFile;    		/* Argument for -p */
-  int sideBySide; 							/* Indicates precence of -s flag */
-	char *inputPPM;
-	char *outputPPM;
-};
 
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
@@ -39,115 +30,55 @@ constitutes a failed and a successful finish of execution
 #define EXIT_FAILURE	1
 #endif
 
-/*
-choices are
-
-hide inputPPM outputPPM
-hide -m numberOfFiles inputBasename outputBasename
-hide -p instructionFile
-hide -s inputPPM outputPPM
-*/
-
-
-const char *argp_program_version = "hide 1.0";
-
-const char *argp_program_bug_address = "https://github.com/Joshua-Xavier/hide-and-go-c/issues/new";
-
-static struct argp_option options[] =
-{
-  {"multi", 'm', "numberOfFiles", 0, "Hide message across numberOfFiles files"},
-  {"process", 'p', "instructionFile", 0, "use instructionFile as an instruction file for processing many ppm messages"},
-  {"sideBySide", 's', 0, 0, "Show the input and output ppm files side by side"},
-  {0}
-};
-
-int flagType = '0';
-
-static error_t parse_opt (int key, char *arg, struct argp_state *state) {
-  struct arguments *arguments = state->input;
-
-  switch (key) {
-    case 'm':
-			if(flagType != '0') {
-				flagType = -1;
-			} else {
-				flagType = 'm';
+int argParse(int argc, char *argv[]) {
+	if (argc >= 3) {
+		if (strcmp("-m", argv[1]) == 0) {
+			// expecting input of form "$ hide -m numberOfFiles inputBasename outputBasename"
+			if(argc == 5) {
+				return 'm'; // process file flag
 			} 
-
-			arguments->numberOfFiles = atoi(arg);
-      break;
-
-    case 'p':
-			if(flagType != '0') {
-				flagType = -1;
-			} else {
-				flagType = 'p';
+		
+		} else if (strcmp("-p", argv[1]) == 0) {
+			// expecting input of form "$ hide -p instructionFile"
+			if(argc == 3) {
+				return 'p'; // process file flag
+			} 
+		
+		} else if (strcmp("-s", argv[1]) == 0) {
+			// expecting input of form "$ hide -s inputPPM outputPPM"
+			if(argc == 4) {
+				return 's'; // side by side flag
 			}
-      arguments->instructionFile = arg;
-			return ARGP_KEY_SUCCESS; 						// the p flag only takes one arg and doesnt use input and output so we leave early
-			
-    case 's':
-			if(flagType != '0') {
-				flagType = -1;
-			} else {
-				flagType = 's';
-			}
-      arguments->sideBySide = 1;
-      break;
 
-    case ARGP_KEY_ARG:
-      if (state->arg_num >= 2) {
-	  		argp_usage(state);
-	  	}
-
-			if(state->arg_num == 0) {
-				 arguments->inputPPM = arg;
-			} else if (state->arg_num == 1) {
-				 arguments->outputPPM = arg;
+		} else {
+			// have to assume standard hide at this stage of form "$ hide inputPPM outputPPM"
+			if(argc == 3) {
+				return '0'; // default case flag
 			}
-      break;
+		}
 
-    case ARGP_KEY_END:
-      if (state->arg_num < 2){
-	  		argp_usage (state);
-			}
-      break;
-			
-    default:
-      return ARGP_ERR_UNKNOWN;
-    }
-  return 0;
+		return EXIT_FAILURE;
+
+	} else {
+		return EXIT_FAILURE;
+	}
 }
 
-static char args_doc[] = "inputPPM ouputPPM";
-static char doc[] = "hide -- Simple explanation here..";
-static struct argp argp = {options, parse_opt, args_doc, doc};
-
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
 	
 	FILE *inputFP,	// the file pointer to the input ppm image
 		 	 *outputFP; // the file pointer to the output ppm image with the hidden message inside
 	
-	struct arguments arguments;
 	
 	int temp, 					  			// used for processing chars
 		height,					  				// the read height of the ppm image
 		width,					  				// the read width of the ppm image
 		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
 		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
-		error;				      			// an error storing variable, 1 on error, 0 on no error
+		error,				      			// an error storing variable, 1 on error, 0 on no error
+		flagType;
 	
-	// set program defaults here
-	arguments.sideBySide = 0;
-	arguments.numberOfFiles = 1; 										// by default number of files message can be written across is 1
-	arguments.instructionFile = "(notSupplied)";
-	arguments.inputPPM = "(notSupplied)";
-	arguments.outputPPM = "(notSupplied)";
-
-	argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
-	printf("%s\n", arguments.inputPPM);
-	printf("%s\n", arguments.outputPPM);
+	flagType = argParse(argc, argv);
 
 	switch(flagType) {
 		case 's':
@@ -161,11 +92,11 @@ int main(int argc, char **argv) {
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");
-			standardHideMessage(arguments);
+			//standardHideMessage(arguments);
 			break;
 	
 		default:
-			printf("Too many flags detected\nHide only supports 1 flag at a time or no flags\n");
+			printf("Incorrect arg format detected\nHide only supports 1 flag at a time or no flags\n");
 			exit(EXIT_FAILURE);
 	}
 
