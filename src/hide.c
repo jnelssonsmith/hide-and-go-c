@@ -12,6 +12,7 @@ output it as a file with the name given by the second argument.
 #include <stdio.h>
 #include <stdlib.h> 
 #include <unistd.h>
+#include <string.h>
 
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");
-			//standardHideMessage(arguments);
+			standardHideMessage(argv[1], argv[2]);
 			break;
 	
 		default:

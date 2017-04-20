@@ -121,7 +121,7 @@ void exitGracefully(int error, char fileName[], FILE *inputFP, FILE *outputFP) {
 	if(!error) { 
 		exit(EXIT_SUCCESS);
 	} else {
-		if(fileName != "") {
+		if(strcmp(fileName, "") != 0) {
 			remove(fileName); // if we have been writing to a file we delete it so it does not remain partially completed
 		}
 		exit(EXIT_FAILURE);
