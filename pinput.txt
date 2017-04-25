@@ -1,0 +1,4 @@
+./img/milhouse.jpg ./ppm-files/mandrill.ppm output.ppm
+./img/milhouse2.jpg ./ppm-files/mandrill2.ppm output2.ppm
+./img/milhouse3.jpg ./ppm-files/mandrill3.ppm output3.ppm
+

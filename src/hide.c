@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'p':
 			fprintf(stderr, "p flag detected\n");
+			parallelExectute(argv[2]);
 			break;
 		case 'm':
 			fprintf(stderr, "m flag detected\n");

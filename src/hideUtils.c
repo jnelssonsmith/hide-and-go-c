@@ -65,3 +65,36 @@ void standardHideMessage(char *inputPPM, char *outputPPM) {
 	
     exitGracefully(error, outputPPM, inputFP, outputFP);
 }
+
+void parallelExectute(char *inputFile) {
+	FILE *inputFP;
+	pid_t pid;
+
+	inputFP = fopen(inputFile, "r");
+	if (inputFP == NULL) {
+		fprintf(stderr, "Could not open supplied file: %s\n", inputFile);
+		exit(EXIT_FAILURE);
+    }
+
+	// we'll define a max string length of 20 chars
+	char messageFile[24],
+		 inputPPMName[24],
+		 outputPPMName[24];
+	while (!feof(inputFP)) {
+		int err = fscanf(inputFP, "%s %s %s", messageFile, inputPPMName, outputPPMName);
+		pid = fork();
+		if(pid == 0) {
+			fprintf(stderr, "Spawned for line\n");
+			if(err == 3) {
+				FILE *messageFP = fopen(messageFile, "r");
+				dup2(fileno(messageFP), STDIN_FILENO);
+				execlp("./hide", "hide", inputPPMName, outputPPMName, NULL);
+			}
+			exit(0);
+		} else if (pid > 0) {
+			
+		} else {
+			fprintf(stderr, "Error creating process\n");
+		}
+	}
+}
