@@ -65,7 +65,7 @@ void standardHideMessage(char *inputPPM, char *outputPPM) {
 		is successful or not we exit gracefully because it is the last thing we need to do */
 	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
 	
-    exitGracefully(error, outputPPM, inputFP, outputFP);
+    //exitGracefully(error, outputPPM, inputFP, outputFP);
 }
 
 void parallelExectute(char *inputFile) {
@@ -101,9 +101,9 @@ void parallelExectute(char *inputFile) {
 	}
 }
 
-void drawPPMImage(int width, int height, FILE *inputFP) {
+void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 	
-	const int SCREEN_WIDTH = width;
+	const int SCREEN_WIDTH = width * 2;
 	const int SCREEN_HEIGHT = height;
 
 	/* The window to render to */
@@ -135,30 +135,44 @@ void drawPPMImage(int width, int height, FILE *inputFP) {
 			SDL_FillRect(screenSurface, NULL, 
 				SDL_MapRGB(screenSurface->format, 0xff, 0xff, 0xff));
 
-			int pixelCount = 0;
-			int r, g, b;
-
-			while (!feof(inputFP)) {
-				r = fgetc(inputFP);
-				g = fgetc(inputFP);
-				b = fgetc(inputFP);
-
+			int pixelCount = 0,
+				y = 0,
+				x = 0,
+				r, 
+				g, 
+				b;
+			while (pixelCount < (SCREEN_WIDTH * SCREEN_HEIGHT)) {
 				
 
-				if(r > -1 & g > -1 & b > -1) {
-					int *p = (int *)screenSurface->pixels + pixelCount;
-					*p=SDL_MapRGB(screenSurface->format, r, g, b);
-					pixelCount += 1;
+				// We know the first SCREEN_WIDTH/2 pixels will be input PPM and next will be outputPPM so... 
+				if(x < width) {
+					r = fgetc(inputFP);
+					g = fgetc(inputFP);
+					b = fgetc(inputFP);
+				} else {
+					r = fgetc(outputFP);
+					g = fgetc(outputFP);
+					b = fgetc(outputFP);
+				}
+				
+				int *p = (int *)((char *)screenSurface->pixels + y * screenSurface->pitch + x * screenSurface->format->BytesPerPixel);
+				*p=SDL_MapRGB(screenSurface->format, r, g, b);
+				pixelCount += 1;
+				x += 1;
+				if(x == SCREEN_WIDTH) {
+					x = 0;
+					y += 1;
 				}
 				
 			}
+       
        
 			SDL_UpdateWindowSurface(window);
 
 
 
-			/* Wait two seconds */
-			SDL_Delay(4000); 
+			/* Wait ten seconds */
+			SDL_Delay(10000); 
 		}
 
 		/* Destroy the window */
@@ -168,8 +182,9 @@ void drawPPMImage(int width, int height, FILE *inputFP) {
 
 }	
 
-void displayImage(char *inputPPM) {
-	FILE *inputFP;	// the file pointer to the input ppm image
+void displayImage(char *inputPPM, char *outputPPM) {
+	FILE *inputFP,	// the file pointer to the input ppm image
+		 *outputFP;
 
     int temp, 					  			// used for processing chars
 		height,					  				// the read height of the ppm image
@@ -179,18 +194,31 @@ void displayImage(char *inputPPM) {
 		error;				 
 
     inputFP = fopen(inputPPM, "r");
+	outputFP = fopen(outputPPM, "r");
 
 	// kill program if input is not defined
 	if (inputFP == NULL) {
 		fprintf(stderr, "Could not open supplied file: %s\n", inputPPM);
 		exit(EXIT_FAILURE);
     }
+
+	if (outputFP == NULL) {
+		fprintf(stderr, "Could not open supplied file: %s\n", outputPPM);
+		exit(EXIT_FAILURE);
+    }
+
 	
 	// handle check to ensure correct PPM file type
 	error = isRawPPM(inputFP, NULL);
 	if(error) {
 		fprintf(stderr, "Incorrect file format detected, aborting\n");
 		exitGracefully(error, "", inputFP, NULL);
+	}
+
+	error = isRawPPM(outputFP, NULL);
+	if(error) {
+		fprintf(stderr, "Incorrect file format detected, aborting\n");
+		exitGracefully(error, "", outputFP, NULL);
 	}
 	
 	// scan through width, heigh and colour range values
@@ -209,11 +237,13 @@ void displayImage(char *inputPPM) {
     if(colourRange == PPM_COLOUR_READ_ERROR) {
 		exitGracefully(PPM_READ_ERROR, "", inputFP, NULL);
 	}
+
+	scanToImageData(outputFP);
 	
 	
 	// from the ppm spec we know there can only be 1 white space character between colour range and pixel raster
 	temp = fgetc(inputFP); 
 
-	drawPPMImage(width, height, inputFP);
+	drawPPMImage(width, height, inputFP, outputFP);
 }
 

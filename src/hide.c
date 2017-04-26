@@ -84,7 +84,8 @@ int main(int argc, char *argv[]) {
 	switch(flagType) {
 		case 's':
 			fprintf(stderr, "s flag detected\n");
-			displayImage(argv[2]);
+			standardHideMessage(argv[2], argv[3]);
+			displayImage(argv[2], argv[3]);
 			break;
 		case 'p':
 			fprintf(stderr, "p flag detected\n");
