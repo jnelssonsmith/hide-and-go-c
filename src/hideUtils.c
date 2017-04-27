@@ -82,22 +82,33 @@ void parallelExectute(char *inputFile) {
 	char messageFile[24],
 		 inputPPMName[24],
 		 outputPPMName[24];
+	
+	int childCount = 0;
+
 	while (!feof(inputFP)) {
 		int err = fscanf(inputFP, "%s %s %s", messageFile, inputPPMName, outputPPMName);
+		childCount += 1;
 		pid = fork();
 		if(pid == 0) {
+			
 			fprintf(stderr, "Spawned for line\n");
 			if(err == 3) {
 				FILE *messageFP = fopen(messageFile, "r");
 				dup2(fileno(messageFP), STDIN_FILENO);
 				execlp("./hide", "hide", inputPPMName, outputPPMName, NULL);
 			}
-			exit(0);
-		} else if (pid > 0) {
-			
+		} else if (pid > 0) {\
 		} else {
 			fprintf(stderr, "Error creating process\n");
 		}
+	}
+	fprintf(stderr, "%d children counted\n", childCount);
+	int count = 0, 
+		status;
+
+	while (count < childCount) {
+		waitpid(-1, &status, 0);
+		count += 1;
 	}
 }
 
