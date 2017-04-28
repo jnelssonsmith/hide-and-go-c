@@ -130,7 +130,7 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 
 	else {
 		/* Create the window */
-		window = SDL_CreateWindow("Hello Pixel",
+		window = SDL_CreateWindow("Input vs Output of Hide",
 			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 			SCREEN_WIDTH, SCREEN_HEIGHT,
 			SDL_WINDOW_SHOWN);
@@ -182,13 +182,19 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 
 
 
-			/* Wait ten seconds */
-			SDL_Delay(10000); 
+			
 		}
 
 		/* Destroy the window */
-		SDL_DestroyWindow(window);
-		SDL_Quit();
+		SDL_Event event;
+            while (SDL_WaitEvent(&event)) {
+              switch (event.type) {
+              case SDL_QUIT:
+                SDL_DestroyWindow(window);
+                SDL_Quit();
+                break;
+              }
+            }
 	}
 
 }	
