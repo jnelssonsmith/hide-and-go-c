@@ -7,7 +7,10 @@
 #include "steglib.h"	// the library of functions for hiding and revealing messages
 
 
-
+/* 
+difference for new task 1
+start at 000 basename
+*/
 void standardHideMessage(char *inputPPM, char *outputPPM) {
     FILE *inputFP,	// the file pointer to the input ppm image
 	     *outputFP; // the file pointer to the output ppm image with the hidden message inside
@@ -66,6 +69,23 @@ void standardHideMessage(char *inputPPM, char *outputPPM) {
 	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
 	
     //exitGracefully(error, outputPPM, inputFP, outputFP);
+}
+
+void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseName) {
+	// ./hide -m number-of-files basename outputBaseName
+	fprintf(stderr, "detected: %d files, input: %s, output: %s\n", numberOfFiles, inputBaseName, outputBaseName);
+	char numberString[9];
+	
+	int count = 0;
+	while(count < numberOfFiles) {
+		snprintf(numberString, 9, "-%03d.ppm", count);
+		count += 1;
+		char *input = malloc(strlen(inputBaseName) + strlen(numberString) + 1);
+		strcpy(input, inputBaseName);
+		strcat(input, numberString);
+		fprintf(stderr, "%s\n", input);
+	}
+
 }
 
 void parallelExectute(char *inputFile) {
@@ -207,7 +227,6 @@ void displayImage(char *inputPPM, char *outputPPM) {
 		height,					  				// the read height of the ppm image
 		width,					  				// the read width of the ppm image
 		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
-		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
 		error;				 
 
     inputFP = fopen(inputPPM, "r");

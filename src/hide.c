@@ -67,17 +67,9 @@ int argParse(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	
-	FILE *inputFP,	// the file pointer to the input ppm image
-		 	 *outputFP; // the file pointer to the output ppm image with the hidden message inside
+	int flagType;
 	
 	
-	int temp, 					  			// used for processing chars
-		height,					  				// the read height of the ppm image
-		width,					  				// the read width of the ppm image
-		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
-		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
-		error,				      			// an error storing variable, 1 on error, 0 on no error
-		flagType;
 	
 	flagType = argParse(argc, argv);
 
@@ -93,6 +85,11 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'm':
 			fprintf(stderr, "m flag detected\n");
+			int numberOfFiles = atoi(argv[2]);
+			if(numberOfFiles > 999) {
+				exit(EXIT_FAILURE);
+			}
+			multiHideMessage(numberOfFiles, argv[3], argv[4]);
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");
