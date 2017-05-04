@@ -11,15 +11,15 @@
 difference for new task 1
 start at 000 basename
 */
-void standardHideMessage(char *inputPPM, char *outputPPM) {
+void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode) {
     FILE *inputFP,	// the file pointer to the input ppm image
 	     *outputFP; // the file pointer to the output ppm image with the hidden message inside
 
-    int temp, 					  			// used for processing chars
-		height,					  				// the read height of the ppm image
-		width,					  				// the read width of the ppm image
-		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
-		maxSizeSupportedByImage,  // the number of bytes there is in the ppm image to hide a message within. 
+    int temp, 					  	// used for processing chars
+		height,					  	// the read height of the ppm image
+		width,					  	// the read width of the ppm image
+		colourRange,			  	// the read colour range of the ppm image (the range of values each pixel can take)
+		maxSizeSupportedByImage,  	// the number of bytes there is in the ppm image to hide a message within. 
 		error;				 
 
     inputFP = fopen(inputPPM, "rb");
@@ -66,13 +66,30 @@ void standardHideMessage(char *inputPPM, char *outputPPM) {
 	maxSizeSupportedByImage = getSupportedImageBytes(width, height);
 	/* now we can hide the message, the fail state is caught in the error variable, regardless of if the hide 
 		is successful or not we exit gracefully because it is the last thing we need to do */
-	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP);
+	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP, multiMode);
+
+	if(inputFP != NULL){
+		fclose(inputFP);
+	}
+
+	if (outputFP != NULL) {
+		fclose(outputFP);
+	}
 	
     //exitGracefully(error, outputPPM, inputFP, outputFP);
 }
 
 void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseName) {
 	// ./hide -m number-of-files basename outputBaseName
+	/**
+		So we have to go through a loop and we know all the outputs and inputs we're looking for'
+		at each stage we will need to check for an end of stdin, and if it is empty then we just create a 
+		file with no message. 
+
+		Then the program should go through for each of the remaining photos and 
+	**/
+
+
 	fprintf(stderr, "detected: %d files, input: %s, output: %s\n", numberOfFiles, inputBaseName, outputBaseName);
 	char numberString[9];
 	
@@ -81,9 +98,19 @@ void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseNa
 		snprintf(numberString, 9, "-%03d.ppm", count);
 		count += 1;
 		char *input = malloc(strlen(inputBaseName) + strlen(numberString) + 1);
+		char *output = malloc(strlen(outputBaseName) + strlen(numberString) + 1);
 		strcpy(input, inputBaseName);
 		strcat(input, numberString);
-		fprintf(stderr, "%s\n", input);
+		strcpy(output, outputBaseName);
+		strcat(output, numberString);
+
+		fprintf(stderr, "reading from: %s\nwriting to: %s\n", input, output);
+
+		standardHideMessage(input, output, 1);
+		
+
+		free(input);
+		free(output);
 	}
 
 }

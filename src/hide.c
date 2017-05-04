@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 	switch(flagType) {
 		case 's':
 			fprintf(stderr, "s flag detected\n");
-			standardHideMessage(argv[2], argv[3]);
+			standardHideMessage(argv[2], argv[3], 0);
 			displayImage(argv[2], argv[3]);
 			break;
 		case 'p':
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");
-			standardHideMessage(argv[1], argv[2]);
+			standardHideMessage(argv[1], argv[2], 0);
 			break;
 	
 		default:

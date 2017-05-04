@@ -37,7 +37,7 @@ The function takes message size as an input so it knows when to stop writing the
 it also takes in the message to write, an input file to read the rgb values to alter and an output file pointer 
 to write the values to. 
 */
-int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP);
+int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP, int multiMode);
 
 /*
 hideMessageSize is very similar to hide message, but it is required to be run before we start hiding the message inside the 

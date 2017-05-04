@@ -68,13 +68,14 @@ void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 }
 
 
-int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP){
+int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP, int multiMode){
 	int bitToHide, 			// the current bit we wish to hide in the image
 		currentNum, 		// the current r,g or b pixel value that we are working on 
 		compareBit, 		// the last bit of the read in r,g or b value 
 		currentChar,		// the current character we have read from the message to hide from standard input
 		messageSize = 0,	// the size of the message to hide
-		error;				// a int used for error signalling
+		error,				// a int used for error signalling
+		count;
 	long positionInFile;	// the position in the file we can use to seek to later when we write in the size of the message
 
 
@@ -89,13 +90,17 @@ int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP){
 
 	fprintf(stderr, "Hiding message...\n");
 	currentChar = fgetc(stdin);
-	while(currentChar != EOF) {
+	count = 0;
+
+	while(currentChar != EOF && maxSizeSupportedByImage > ((messageSize * 8) + 264)) {
 		/* while the current character is not the end of the file we iterate through to get each of the 
 		   8 bytes of the char, for each of these bits we compare them to the r,g,b value and make the 
 		   necessary changes so that the bit matches when we write out */
+	
 		for(int j=7; j > -1; j--) {
 			bitToHide = currentChar >> j & 1;
 			currentNum = fgetc(inputFP);
+			count += 1;
 			compareBit = currentNum % 2;
 
 			if(compareBit && !bitToHide) {
@@ -107,22 +112,33 @@ int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP){
 			}
 		}
 
-		currentChar = fgetc(stdin);
 		messageSize += 1;
+
+		if(maxSizeSupportedByImage > ((messageSize * 8) + 264)) {
+			currentChar = fgetc(stdin);
+			// we only read from standard in if we have not gone over
+		} else {
+			fprintf(stderr, "Hit the end of the size at messageSize = %d, or %d exactly\n", messageSize, ((messageSize * 8) + 256));
+		}
+		
+		
+		
 
 		/* we check whether the message fits seeing as we don't know the message size before hand, if we reach a point 
 		   where it doesn't fit, we exit the loop return an error */
-		error = canHideMessage(messageSize, maxSizeSupportedByImage);
-		if(error) {
-			return MESSAGE_WRITE_ERROR;
+		if(!multiMode) {
+			error = canHideMessage(messageSize, maxSizeSupportedByImage);
+			if(error) {
+				return MESSAGE_WRITE_ERROR;
+			}
 		}
-		
 	}
 	
 	fprintf(stderr, "Message size is: %d or %d bits\n", messageSize, messageSize * 8);
 	
 	// now that the message is hidden, we write out the remaining bytes in the file as they appear originally 
 	while (inputFP) {
+		//fprintf(stderr, "Still entered loop even though we ran out of space\n");
 		currentNum = fgetc(inputFP);
 		if(currentNum == EOF) {
 			break;

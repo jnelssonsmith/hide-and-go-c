@@ -1,6 +1,6 @@
 # we define common dependencies so we don't have to write out the same
 # thing over and over
-COMMON_DEPS = src/ppmlib.c src/ppmlib.h src/steglib.c src/steglib.h src/hideUtils.c src/hideUtils.h
+COMMON_DEPS = src/ppmlib.c src/ppmlib.h src/steglib.c src/steglib.h src/hideUtils.c src/hideUtils.h src/unhideUtils.c src/unhideUtils.c
 FLAGS=`sdl2-config --cflags`
 SDLLIBS=`sdl2-config --libs`
 
@@ -19,4 +19,5 @@ unhide: src/unhide.c $(COMMON_DEPS)
 
 # use make clean to remove the compiled files
 clean: 
-	rm -f unhide hide
+	rm -f unhide hide output/* standardHideUnhideWorked.jpg sFlagWorked.jpg mFlagWorked.gif someotherthing.jpg
+	

@@ -7,9 +7,10 @@ and returns the hidden message to standard output.
 */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
-#include "steglib.h"	// the library of functions for hiding and revealing messages
+#include <stdlib.h> 
+#include <unistd.h>
+#include <string.h>
+#include "unhideUtils.c"	// 
 
 /* 
 These are usually defined but just in case the test computers use some weird setup we 
@@ -24,46 +25,65 @@ constitutes a failed and a successful finish of execution
 #define EXIT_FAILURE	1
 #endif
 
+int argParse(int argc, char *argv[]) {
+	if (argc >= 2) {
+		if (strcmp("-m", argv[1]) == 0) {
+			// expecting input of form "$ hide -m numberOfFiles inputBasename outputBasename"
+			if(argc == 3) {
+				return 'm'; // process file flag
+			} 
+
+		} else {
+			// have to assume standard hide at this stage of form "$ hide inputPPM outputPPM"
+			if(argc == 2) {
+				return '0'; // default case flag
+			}
+		}
+
+		return EXIT_FAILURE;
+
+	} else {
+		return EXIT_FAILURE;
+	}
+}
 
 int main(int argc, char **argv) {
+	int flagType;
+	int count;
+	char numberString[9];
 	
-	FILE *inputFP;	// the file pointer to the input ppm image
+	
+	flagType = argParse(argc, argv);
 
-	int size,		// used to store read in size of secret message
-		error; 		// an error storing variable, 1 on error, 0 on no error, 
+	switch(flagType) {
+		case 'm':
+			fprintf(stderr, "m flag detected\n");
 
-	// kill program if incorrect number of args is supplied
-	if(argc != 2) {
-		fprintf(stderr, "Incorrect number of arguments supplied, unhide expects 1 argument\n[1] path to a ppm file with a hidden message in it\n");
-		exit(EXIT_FAILURE);
+			count = 0;
+			while (1) {
+				snprintf(numberString, 9, "-%03d.ppm", count);
+				count += 1;
+				char *output = malloc(strlen(argv[2]) + strlen(numberString) + 1);
+				strcpy(output, argv[2]);
+				strcat(output, numberString);
+
+				unhideMessage(output, 1);
+
+				free(output);
+			}
+			
+			// handle multi file unhide here
+			break;
+		case '0':
+			fprintf(stderr, "no flags detected\n");
+			unhideMessage(argv[1], 0);
+			break;
+	
+		default:
+			fprintf(stderr, "Incorrect arg format detected\nUnhide only supports 1 flag at a time or no flags\n");
+			exit(EXIT_FAILURE);
 	}
 
-	inputFP = fopen(argv[1], "rb");
-
-	// kill program if input file does not exist
-	if (inputFP == NULL) {
-		fprintf(stderr, "Could not open supplied file: %s\n", argv[1]);
-		exit(EXIT_FAILURE);
-	}
-	
-	// check input is raw ppm format
-	error = isRawPPM(inputFP, NULL);
-	if(error) {
-		fprintf(stderr, "Incorrect file format detected, aborting\n");
-		exitGracefully(error, "", inputFP, NULL);
-	}
-	
-	// skip to the image data, which is all we care about when reading a secret message
-	scanToImageData(inputFP);
-
-	// get the size out of the image data
-	size = readSizeOfSecretMessage(inputFP);
-
-	// then use the size to read in the secret message and output it to standard output
-	readSecretMessage(size, inputFP);
-
-	// once read we can close everything up
-	exitGracefully(EXIT_SUCCESS, "", inputFP, NULL);
 }
 
 
