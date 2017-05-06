@@ -67,8 +67,32 @@ void hideMessageSize(int messageSize, FILE *inputFP, FILE *outputFP) {
 	fprintf(stderr, "\n");
 }
 
+int hideNumberOfFiles(int numberOfFiles, FILE *inputFP, FILE *outputFP) {
+	int bitToHide, compareBit, currentNum;
+	
+	if(numberOfFiles > 255) {
+		return MESSAGE_WRITE_ERROR;
+	} else {
 
-int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP, int multiMode){
+		for(int j=7; j > -1; j--) {
+			bitToHide = numberOfFiles >> j & 1;
+			currentNum = fgetc(inputFP);
+			compareBit = currentNum % 2;
+
+			if(compareBit && !bitToHide) {
+				fputc(currentNum - 1, outputFP);
+			} else if (!compareBit && bitToHide) {
+				fputc(currentNum + 1, outputFP);
+			} else {
+				fputc(currentNum, outputFP);
+			}
+		}
+
+		return MESSAGE_WRITE_SUCCESS;
+	}
+}
+
+int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP, int multiMode, int numberOfFiles){
 	int bitToHide, 			// the current bit we wish to hide in the image
 		currentNum, 		// the current r,g or b pixel value that we are working on 
 		compareBit, 		// the last bit of the read in r,g or b value 
@@ -79,6 +103,13 @@ int hideMessage(int maxSizeSupportedByImage, FILE *inputFP, FILE *outputFP, int 
 	long positionInFile;	// the position in the file we can use to seek to later when we write in the size of the message
 
 
+	
+	if(multiMode) {
+		error = hideNumberOfFiles(numberOfFiles, inputFP, outputFP);
+		if(error) {
+			return MESSAGE_WRITE_ERROR;
+		}
+	}
 	// we will need to revist the start of the pixel raster later to write in the message size so we save it here
 	positionInFile = ftell(inputFP);
 	

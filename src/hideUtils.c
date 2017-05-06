@@ -11,7 +11,7 @@
 difference for new task 1
 start at 000 basename
 */
-void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode) {
+void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode, int numberOfFiles) {
     FILE *inputFP,	// the file pointer to the input ppm image
 	     *outputFP; // the file pointer to the output ppm image with the hidden message inside
 
@@ -66,7 +66,7 @@ void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode) {
 	maxSizeSupportedByImage = getSupportedImageBytes(width, height);
 	/* now we can hide the message, the fail state is caught in the error variable, regardless of if the hide 
 		is successful or not we exit gracefully because it is the last thing we need to do */
-	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP, multiMode);
+	error = hideMessage(maxSizeSupportedByImage, inputFP, outputFP, multiMode, numberOfFiles);
 
 	if(inputFP != NULL){
 		fclose(inputFP);
@@ -106,7 +106,7 @@ void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseNa
 
 		fprintf(stderr, "reading from: %s\nwriting to: %s\n", input, output);
 
-		standardHideMessage(input, output, 1);
+		standardHideMessage(input, output, 1, numberOfFiles);
 		
 
 		free(input);

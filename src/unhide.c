@@ -49,8 +49,10 @@ int argParse(int argc, char *argv[]) {
 
 int main(int argc, char **argv) {
 	int flagType;
-	int count;
+	int count = 0;
+	int numberOfFiles = 255; // start number of files at max and know it can only decrease when read
 	char numberString[9];
+	FILE *inputFP;
 	
 	
 	flagType = argParse(argc, argv);
@@ -59,24 +61,25 @@ int main(int argc, char **argv) {
 		case 'm':
 			fprintf(stderr, "m flag detected\n");
 
-			count = 0;
-			while (1) {
+			while (count < numberOfFiles) {
 				snprintf(numberString, 9, "-%03d.ppm", count);
-				count += 1;
 				char *output = malloc(strlen(argv[2]) + strlen(numberString) + 1);
 				strcpy(output, argv[2]);
 				strcat(output, numberString);
-
-				unhideMessage(output, 1);
-
+				inputFP = getUnhideFP(output, 1);
+				numberOfFiles = getNumberOfFiles(inputFP);
+				unhideMessage(inputFP, 1);
+				fclose(inputFP);
 				free(output);
+				count += 1;
 			}
 			
 			// handle multi file unhide here
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");
-			unhideMessage(argv[1], 0);
+			inputFP = getUnhideFP(argv[1], 0);
+			unhideMessage(inputFP, 0);
 			break;
 	
 		default:
