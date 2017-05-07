@@ -74,7 +74,6 @@ int main(int argc, char **argv) {
 				count += 1;
 			}
 			
-			// handle multi file unhide here
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");

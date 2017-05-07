@@ -9,10 +9,6 @@
 #include "steglib.h"	// the library of functions for hiding and revealing messages
 
 
-/* 
-difference for new task 1
-start at 000 basename
-*/
 void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode, int numberOfFiles) {
     FILE *inputFP,	// the file pointer to the input ppm image
 	     *outputFP; // the file pointer to the output ppm image with the hidden message inside
@@ -78,7 +74,6 @@ void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode, int num
 		fclose(outputFP);
 	}
 	
-    //exitGracefully(error, outputPPM, inputFP, outputFP);
 }
 
 void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseName) {
@@ -87,6 +82,7 @@ void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseNa
 	char numberString[9];
 	
 	int count = 0;
+	// loop through numberOfFiles times and calculate the ppm image name we're looking for
 	while(count < numberOfFiles) {
 		snprintf(numberString, 9, "-%03d.ppm", count);
 		count += 1;
@@ -110,7 +106,7 @@ void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseNa
 void parallelExecute(char *inputFile) {
 	FILE *inputFP;
 	pid_t pid;
-	int failure = 0;
+	int failure = 0; // a failure flag we use if we detect a corrupt type of input file
 
 	inputFP = fopen(inputFile, "r");
 	if (inputFP == NULL) {
@@ -118,7 +114,7 @@ void parallelExecute(char *inputFile) {
 		exit(EXIT_FAILURE);
     }
 
-	// we'll define a max string length of 20 chars
+	// we'll define a max string length of 24 chars
 	char messageFile[24],
 		 inputPPMName[24],
 		 outputPPMName[24];
@@ -128,6 +124,7 @@ void parallelExecute(char *inputFile) {
 	while (!feof(inputFP)) {
 		int err = fscanf(inputFP, "%s %s %s", messageFile, inputPPMName, outputPPMName);
 		if(err != 3) {
+			// if the scan fails then we break and exit
 			failure = 1;
 			break;
 		}
@@ -135,15 +132,17 @@ void parallelExecute(char *inputFile) {
 		pid = fork();
 		if(pid == 0) {
 			
-			fprintf(stderr, "Spawned for line\n");
+			// we're in the child process and can now run hdie for the args
 			if(err == 3) {
 				FILE *messageFP = fopen(messageFile, "r");
-				dup2(fileno(messageFP), STDIN_FILENO);
+				dup2(fileno(messageFP), STDIN_FILENO); //here we copy the input message to stdin for the program to use
 				execlp("./hide", "hide", inputPPMName, outputPPMName, NULL);
 			}
-		} else if (pid > 0) {\
+		} else if (pid > 0) {
+			// nothing here but we distinguish between being in parent and the fork failing
 		} else {
 			fprintf(stderr, "Error creating process\n");
+			exit(EXIT_FAILURE);
 		}
 	}
 	fprintf(stderr, "%d children counted\n", childCount);
@@ -161,7 +160,7 @@ void parallelExecute(char *inputFile) {
 }
 
 void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
-	
+	// seeing as we are drawing side by side the width will be twice the size of on of the images
 	const int SCREEN_WIDTH = width * 2;
 	const int SCREEN_HEIGHT = height;
 
@@ -174,6 +173,7 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
 	}
 
 	else {
@@ -185,6 +185,7 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 
 		if (window == NULL) {
 			printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+			exit(EXIT_FAILURE);
 		}
 		else {
 			/* Get screen surface */
@@ -203,7 +204,7 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 			while (pixelCount < (SCREEN_WIDTH * SCREEN_HEIGHT)) {
 				
 
-				// We know the first SCREEN_WIDTH/2 pixels will be input PPM and next will be outputPPM so... 
+				// We know the first SCREEN_WIDTH/2 pixels will be input PPM and next will be outputPPM so we assign rbc values based on that
 				if(x < width) {
 					r = fgetc(inputFP);
 					g = fgetc(inputFP);
@@ -214,10 +215,12 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 					b = fgetc(outputFP);
 				}
 				
+				// draw pixel to screen and we continue 
 				int *p = (int *)((char *)screenSurface->pixels + y * screenSurface->pitch + x * screenSurface->format->BytesPerPixel);
 				*p=SDL_MapRGB(screenSurface->format, r, g, b);
 				pixelCount += 1;
 				x += 1;
+				// if x hits the end of the row then we reset x to 0 and go to next row of pixels
 				if(x == SCREEN_WIDTH) {
 					x = 0;
 					y += 1;
@@ -233,7 +236,7 @@ void drawPPMImage(int width, int height, FILE *inputFP, FILE *outputFP) {
 			
 		}
 
-		/* Destroy the window */
+		// here we wait for user to exit then we quit
 		SDL_Event event;
             while (SDL_WaitEvent(&event)) {
               switch (event.type) {
