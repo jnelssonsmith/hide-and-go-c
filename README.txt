@@ -2,7 +2,7 @@
 Josh Nelsson-Smith
 25954113
 Submitted for FIT3042 - System Tools And Programming Languages
-26/03/2017
+07/05/2017
 
 == INSTALLATION == 
 The project includes a Makefile for convenience. 
@@ -24,15 +24,25 @@ Finally should you want to delete these files, you can use
 This assignment required us to create two programs, hide and unhide. hide takes in a ppm 
 format image and hides a message from standard input, the program then creates a new ppm image 
 with name given by the user with the message hidden within it. Unhide will take an image created by hide and 
-return the secret message to standard output. 
+return the secret message to standard output. In addition to this we now also support different flags 
+for hide and unhide namely:
+hide -p file  where file is a text file of the form messageFile inputPPM outputPPM
+hide -m numberOfFiles inputBaseName OutputBaseName   which will write a message from stdin 
+to numberOfFiles files with names of the form inputBaseName-00x.ppm etc. 
+hide -s inputPPM outputPPM  which hides a message from stdin inside inputPPM and 
+outputs it as outputPPM, then displays both side by side on the screen to view the 
+differences
 
 == FILE STRUCTURE == 
-/img/       - the image directory where I have put a test jpg file to hide
+/img/       - the image directory where I have put a test files to hide
 /ppm-files/ - the directory where you can keep some ppm files to test the program on
 /src/       - where the source c files and headers reside
-/test/      - for convenience I have included a test shell script that takes a ppm image and hides a jpeg within it
-	      then it unhides the image. 
-
+/output/    - where my test scripts output the ppm's with messages hidden in them, it is not necessary to output to this file but I find
+              it helped keep the directory clean for me
+/test/      - for convenience (and my own sanity!) I have included a few scripts to automate the 
+              testing of the program, there is one for each seperate flag as well as testAll.sh which runs 
+              all the tests
+ 
 == USAGE == 
 hide takes 2 arguments, the ppm image to hide within and the output filename, it also takes it's message from stdin
 	$ ./hide somePPMImage.ppm myFileWithHiddenMessage.ppm < someInputRedirected
@@ -58,7 +68,10 @@ unhide takes 1 argument, the ppm image that has a hidden message in it and outpu
   supported by my hide function is ~2GB. I feel this is a fair tradeoff and most PPM images    	
   will not be close to having enough space to hide a message like that anyway. 
 
-- I have not provided the bonus functionality to handle BMP format images
+- The program only supports hiding of up messages within up to 255 files 
+
+
+- I have not provided the bonus functionality to handle BMP format images or image directory -d function
 
 - You should also note that I have chosen to optimise for space over time, the entire program
   is very space effecient by making ample use of fget type calls, however as these are system 

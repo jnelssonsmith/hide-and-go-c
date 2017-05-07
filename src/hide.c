@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 		case 'm':
 			fprintf(stderr, "m flag detected\n");
 			int numberOfFiles = atoi(argv[2]);
-			if(numberOfFiles > 999) {
+			if(numberOfFiles > 255) {
 				exit(EXIT_FAILURE);
 			}
 			multiHideMessage(numberOfFiles, argv[3], argv[4]);
