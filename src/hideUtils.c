@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <SDL2/SDL.h>
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
@@ -249,11 +251,11 @@ void displayImage(char *inputPPM, char *outputPPM) {
 	FILE *inputFP,	// the file pointer to the input ppm image
 		 *outputFP;
 
-    int temp, 					  			// used for processing chars
-		height,					  				// the read height of the ppm image
+    int height,					  				// the read height of the ppm image
 		width,					  				// the read width of the ppm image
 		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
-		error;				 
+		error;
+	char temp;			 
 
     inputFP = fopen(inputPPM, "r");
 	outputFP = fopen(outputPPM, "r");
