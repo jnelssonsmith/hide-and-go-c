@@ -80,15 +80,6 @@ void standardHideMessage(char *inputPPM, char *outputPPM, int multiMode, int num
 }
 
 void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseName) {
-	// ./hide -m number-of-files basename outputBaseName
-	/**
-		So we have to go through a loop and we know all the outputs and inputs we're looking for'
-		at each stage we will need to check for an end of stdin, and if it is empty then we just create a 
-		file with no message. 
-
-		Then the program should go through for each of the remaining photos and 
-	**/
-
 
 	fprintf(stderr, "detected: %d files, input: %s, output: %s\n", numberOfFiles, inputBaseName, outputBaseName);
 	char numberString[9];
@@ -107,7 +98,6 @@ void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseNa
 		fprintf(stderr, "reading from: %s\nwriting to: %s\n", input, output);
 
 		standardHideMessage(input, output, 1, numberOfFiles);
-		
 
 		free(input);
 		free(output);
@@ -115,9 +105,10 @@ void multiHideMessage(int numberOfFiles, char *inputBaseName, char *outputBaseNa
 
 }
 
-void parallelExectute(char *inputFile) {
+void parallelExecute(char *inputFile) {
 	FILE *inputFP;
 	pid_t pid;
+	int failure = 0;
 
 	inputFP = fopen(inputFile, "r");
 	if (inputFP == NULL) {
@@ -134,6 +125,10 @@ void parallelExectute(char *inputFile) {
 
 	while (!feof(inputFP)) {
 		int err = fscanf(inputFP, "%s %s %s", messageFile, inputPPMName, outputPPMName);
+		if(err != 3) {
+			failure = 1;
+			break;
+		}
 		childCount += 1;
 		pid = fork();
 		if(pid == 0) {
@@ -156,6 +151,10 @@ void parallelExectute(char *inputFile) {
 	while (count < childCount) {
 		waitpid(-1, &status, 0);
 		count += 1;
+	}
+
+	if(failure) {
+		exit(EXIT_FAILURE);
 	}
 }
 

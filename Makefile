@@ -19,5 +19,5 @@ unhide: src/unhide.c $(COMMON_DEPS)
 
 # use make clean to remove the compiled files
 clean: 
-	rm -f unhide hide output/* standardHideUnhideWorked.jpg sFlagWorked.jpg mFlagWorked.gif someotherthing.jpg
+	rm -f unhide hide output/* standardHideUnhideWorked.jpg sFlagWorked.jpg mFlagWorked.gif secretMessage*.txt
 	

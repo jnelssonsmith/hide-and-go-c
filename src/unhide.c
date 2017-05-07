@@ -66,9 +66,9 @@ int main(int argc, char **argv) {
 				char *output = malloc(strlen(argv[2]) + strlen(numberString) + 1);
 				strcpy(output, argv[2]);
 				strcat(output, numberString);
-				inputFP = getUnhideFP(output, 1);
+				inputFP = getUnhideFP(output);
 				numberOfFiles = getNumberOfFiles(inputFP);
-				unhideMessage(inputFP, 1);
+				unhideMessage(inputFP);
 				fclose(inputFP);
 				free(output);
 				count += 1;
@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
 			break;
 		case '0':
 			fprintf(stderr, "no flags detected\n");
-			inputFP = getUnhideFP(argv[1], 0);
-			unhideMessage(inputFP, 0);
+			inputFP = getUnhideFP(argv[1]);
+			unhideMessage(inputFP);
 			break;
 	
 		default:

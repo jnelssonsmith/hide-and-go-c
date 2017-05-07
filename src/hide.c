@@ -1,7 +1,7 @@
  /*
 NAME: Joshua Nelsson-Smith
 START DATE: 10/03/17
-LAST MODIFIED: 25/03/17
+LAST MODIFIED: 06/05/17
 DESCRIPTION: hide is a program that reads in a ppm image as it's first argument 
 and an output file name as it's second argument. It then takes in a message to 
 hide within the ppm image through stdin. If there are no errors with the 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'p':
 			fprintf(stderr, "p flag detected\n");
-			parallelExectute(argv[2]);
+			parallelExecute(argv[2]);
 			break;
 		case 'm':
 			fprintf(stderr, "m flag detected\n");

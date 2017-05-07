@@ -1,4 +1,3 @@
-./img/milhouse.jpg ./ppm-files/mandrill.ppm output.ppm
-./img/milhouse2.jpg ./ppm-files/mandrill2.ppm output2.ppm
-./img/milhouse3.jpg ./ppm-files/mandrill3.ppm output3.ppm
-
+./test/testMessage1.txt ./ppm-files/boxes.ppm ./output/pFlagOut1.ppm
+./test/testMessage2.txt ./ppm-files/house.ppm ./output/pFlagOut2.ppm
+./test/testMessage3.txt ./ppm-files/tree.ppm ./output/pFlagOut3.ppm

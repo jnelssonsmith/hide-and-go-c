@@ -5,12 +5,9 @@
 #include "ppmlib.h"		// the library of functions for dealing with common ppm tasks
 #include "steglib.h"	// the library of functions for hiding and revealing messages
 
-void unhideMessage(FILE *inputFP, int multiMode) {
+void unhideMessage(FILE *inputFP) {
 	int size; // used to store read in size of secret message
 
-	if(multiMode) {
-		
-	}
 	// get the size out of the image data
 	size = readSizeOfSecretMessage(inputFP);
 
@@ -26,7 +23,7 @@ void unhideMessage(FILE *inputFP, int multiMode) {
 }
 
 
-FILE* getUnhideFP(char *inputName, int multiMode) {
+FILE* getUnhideFP(char *inputName) {
 	FILE *inputFP;	// the file pointer to the input ppm image
 
 	int error; 		// an error storing variable, 1 on error, 0 on no error, 

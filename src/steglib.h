@@ -65,6 +65,10 @@ inputs
 */
 void readSecretMessage(int size, FILE *inputFP);
 
+/*
+Hide number of files is used by the -m flag for hiding multiple files, in this case we hide the number of files in 
+a 1 byte int (0-255) at the start of the file. 
+*/
 int hideNumberOfFiles(int numberOfFiles, FILE *inputFP, FILE *outputFP);
 
 #endif
