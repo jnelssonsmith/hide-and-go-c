@@ -254,8 +254,7 @@ void displayImage(char *inputPPM, char *outputPPM) {
     int height,					  				// the read height of the ppm image
 		width,					  				// the read width of the ppm image
 		colourRange,			  			// the read colour range of the ppm image (the range of values each pixel can take)
-		error;
-	char temp;			 
+		error;		 
 
     inputFP = fopen(inputPPM, "r");
 	outputFP = fopen(outputPPM, "r");
@@ -306,7 +305,7 @@ void displayImage(char *inputPPM, char *outputPPM) {
 	
 	
 	// from the ppm spec we know there can only be 1 white space character between colour range and pixel raster
-	temp = fgetc(inputFP); 
+	fgetc(inputFP); 
 
 	drawPPMImage(width, height, inputFP, outputFP);
 }
